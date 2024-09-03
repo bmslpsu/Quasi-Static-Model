@@ -17,7 +17,7 @@
 current_time = datetime;
 
 %% Uncomment this section to run batch 
-i = 50:100;
+i = [50 70 80 90 95 100];
 
 % Chordwise cut
 for t=1:length(i)
@@ -60,16 +60,68 @@ end
 %     save(fullpath, 'Fly_Master');  
 % end
 
-save('C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Code\Main Code\Outputs\Fly_Master_6.mat', 'Fly_Master');
+save('C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Code\Main Code\Outputs\Fly_Master_Inverted_paper.mat', 'Fly_Master');
+
+
+%% Filter data
+%Butter filter to compare to actual collected data
+[b, a] = butter(2, 0.8, 'low');
+
+hold on
+for i=1:length(Fly_Master)
+
+    
+    for j=1:3
+        Force_lh_f(j,:,i)=filtfilt(b, a, Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(j,:));
+        Force_rh_f(j,:,i)=filtfilt(b, a, Fly_Master(i).Fly.force_total.Force_Body_rh.force_Total(j,:));
+        Force_lh_f_mean(i,j) = mean(Force_lh_f(j,:,i));
+        Force_rh_f_mean(i,j) = mean(Force_rh_f(j,:,i));
+    end
+end
+
+time = Fly_Master(1).Fly.time(1:113)/Fly_Master(1).Fly.time(113) * 100;
+
+figure
+hold on
+for i=4:4  
+    plot(time,Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(2,:)/Fly_Master(i).Fly.total.weight,"r")
+    plot(time,Force_lh_f(2,:,i)/Fly_Master(i).Fly.total.weight,"k")
+    plot(time,mean(Force_lh_f(2,:,i))*ones(113)/Fly_Master(i).Fly.total.weight,"k--")
+    plot(time,mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(2,:))*ones(113)/Fly_Master(i).Fly.total.weight,"r--")
+    legend(["Unfiltered" "Filtered"])
+    ylabel("Normalized Z Forces (F_z/mg)")
+    xlabel('Wingbeat Cylce (%)')
+end
+hold off
+
+figure
+hold on
+plot(time,Force_lh_f(2,:,4)/Fly_Master(4).Fly.total.weight,"r")
+plot(time,Force_rh_f(2,:,4)/Fly_Master(4).Fly.total.weight,"b")
+plot(time,(Force_lh_f(2,:,4)+Force_rh_f(2,:,4))/Fly_Master(4).Fly.total.weight,"m")
+plot(time,mean(Force_rh_f(2,:,4))*ones(113)/Fly_Master(4).Fly.total.weight,"r--")
+plot(time,mean(Force_rh_f(2,:,4))*ones(113)/Fly_Master(4).Fly.total.weight,"b--")
+plot(time,mean(Force_lh_f(2,:,4)+Force_rh_f(2,:,4))*ones(113)/Fly_Master(4).Fly.total.weight,"m--")
+legend(["Damaged" "Intact" "Total"])
+ylabel("Normalized Z Forces (F_z/mg)")
+xlabel('Wingbeat Cylce (%)')
+hold off
 
 
 %% Uncomment this section to see the compiled data from the batch run
+
+
+
+
 for i=1:length(Fly_Master)
     S_3_Ratio(i) = Fly_Master(i).Fly.total.S_3_Ratio;
     S_2_Ratio(i) = Fly_Master(i).Fly.total.S_2_Ratio;
     Force_X_mean(i) = (mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(1,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_rh.force_Total(1,:)))/Fly_Master(i).Fly.total.weight;
     Force_Y_mean(i) = (-mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(3,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_rh.force_Total(3,:)))/Fly_Master(i).Fly.total.weight;
     Force_Z_mean(i) = (mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(2,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_rh.force_Total(2,:)))/Fly_Master(i).Fly.total.weight;
+    Force_f_X_mean_t(i) = (Force_lh_f_mean(i,1) + Force_rh_f_mean(i,1))/Fly_Master(i).Fly.total.weight;
+    Force_f_Y_mean_t(i) = (-Force_lh_f_mean(i,3) + Force_rh_f_mean(i,3))/Fly_Master(i).Fly.total.weight;
+    Force_f_Z_mean_t(i) = (Force_lh_f_mean(i,2) + Force_rh_f_mean(i,2))/Fly_Master(i).Fly.total.weight;
     Moment_Roll_mean(i) = (mean(Fly_Master(i).Fly.force_total.Moments_Body_lh.moment_roll(:))/Fly_Master(i).Fly.wing_lh.wing_length - mean(Fly_Master(i).Fly.force_total.Moments_Body_rh.moment_roll(:))/Fly_Master(i).Fly.wing_rh.wing_length)/Fly_Master(i).Fly.total.weight;
     Moment_Pitch_mean(i) = (mean(Fly_Master(i).Fly.force_total.Moments_Body_lh.moment_pitch(:))/Fly_Master(i).Fly.wing_lh.wing_length + mean(Fly_Master(i).Fly.force_total.Moments_Body_rh.moment_pitch(:))/Fly_Master(i).Fly.wing_rh.wing_length)/Fly_Master(i).Fly.total.weight;
     Moment_Yaw_mean(i) = (mean(Fly_Master(i).Fly.force_total.Moments_Body_lh.moment_yaw(:))/Fly_Master(i).Fly.wing_lh.wing_length - mean(Fly_Master(i).Fly.force_total.Moments_Body_rh.moment_yaw(:))/Fly_Master(i).Fly.wing_rh.wing_length)/Fly_Master(i).Fly.total.weight;
@@ -80,7 +132,10 @@ hold on
 plot(S_2_Ratio,Force_X_mean,'Color',[1, 0.5, 0])
 plot(S_2_Ratio,Force_Y_mean,'Color',"g")
 plot(S_2_Ratio,Force_Z_mean,'Color',"b")
-legend(["X" "Y" "Z"])
+plot(S_2_Ratio, Force_f_X_mean_t, 'Color', [1, 0.5, 0], 'LineStyle', '--')
+plot(S_2_Ratio,Force_f_Y_mean_t,"g--")
+plot(S_2_Ratio,Force_f_Z_mean_t,"b--")
+legend(["X" "Y" "Z" "X_f_i_l_t_e_r_e_d" "Y_f_i_l_t_e_r_e_d" "Z_f_i_l_t_e_r_e_d"])
 ylabel("Normalized Forces (F/mg)")
 xlabel("Second moment of area Ration S_2")
 %axis([.5 1 0 1])
@@ -197,6 +252,10 @@ switch Kinematic_Selection
         % Suplimental Material: Datatset S2
         % (Michael H. Dickinson et. all) 2017
         load('Data_Sets\Dataset_S2.mat', 'Deviation_IntactWing', 'Rotation_IntactWing', 'Stroke_IntactWing', 'Time_norm')
+        Deviation_IntactWing = -Deviation_IntactWing;
+        Rotation_IntactWing = -Rotation_IntactWing;
+        Stroke_IntactWing = -Stroke_IntactWing;
+        
     case 3
         % This will be a custom data uploaded in the future
     otherwise
