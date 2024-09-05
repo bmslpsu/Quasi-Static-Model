@@ -3,7 +3,7 @@ function [Body_Shape] = Standard_Body(plot_num)
 
 %% Load data
 
-load ('rsfs20160103supp2.mat', 'body_model');
+load(['Data_Sets' filesep 'Dataset_S1.mat'], 'body_model')
 
 %% Left Wing
 % % Extract data for current dataset

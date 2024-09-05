@@ -244,18 +244,17 @@ switch Kinematic_Selection
         % Loads previously generated data wing kinematics come from
         % Integrative Model of Drosophila Flight, Figure 9
         % (William B. Dickson, Andrew D. Straw, and Michael H. Dickinson) 2008
-        load('Data_Sets\Fly_Angles.mat')
+        load(['Data_Sets' filesep 'Fly_Angles.mat'])
     case 2
         % Loads previously generated data wing kinematics come from
         % Flies compensate for unilateral wing damage through modular
         % adjustments of wing and body kinematics, Figure 1d
-        % Suplimental Material: Datatset S2
-        % (Michael H. Dickinson et. all) 2017
-        load('Data_Sets\Dataset_S2.mat', 'Deviation_IntactWing', 'Rotation_IntactWing', 'Stroke_IntactWing', 'Time_norm')
+        % Supplemental Material: Dataset S2
+        % (Michael H. Dickinson et. al.) 2017
+        load(['Data_Sets' filesep 'Dataset_S2.mat'], 'Deviation_IntactWing', 'Rotation_IntactWing', 'Stroke_IntactWing', 'Time_norm')
         Deviation_IntactWing = -Deviation_IntactWing;
         Rotation_IntactWing = -Rotation_IntactWing;
-        Stroke_IntactWing = -Stroke_IntactWing;
-        
+        Stroke_IntactWing = -Stroke_IntactWing;     
     case 3
         % This will be a custom data uploaded in the future
     otherwise

@@ -3,7 +3,7 @@ function [Wing_left_x_data, Wing_left_y_data, Wing_left_z_data, Wing_right_x_dat
 
 %% Load data
 
-load('Data_Sets\Dataset_S1.mat', 'wing_model')
+load(['Data_Sets' filesep 'Dataset_S1.mat'], 'wing_model')
 
 %% Left Wing
 % Extract data for current dataset
