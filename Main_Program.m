@@ -7,25 +7,28 @@
 
 
 %% Uncomment to Clear Everything
-% clear all
-% clc
-% close all
-% warning off
+clear all
+clc
+close all
+warning off
 
 
 %% Runtime
 current_time = datetime;
 
 %% Uncomment this section to run batch 
-% % %i = [50 70 80 90 95 100];
-% % i=100;
-% % 
-% % % Chordwise cut
-% % for t=1:length(i)
-% %     Fly_Master(t).Fly  = Main_Program_Run(i(t), 100, 100, 100);
-% %     Fly_Master(t).chord_cut = i(t);
-% %     Fly_Master(t).span_cut = 100;
-% % end
+%i = [50 70 80 90 95 100];
+i = [100 100 100 100 100 100];
+Stroke_Amplitude = [75 80 85 90 95 100];
+%i=100;
+
+% Chordwise cut
+for t=1:length(i)
+    Fly_Master(t).Fly  = Main_Program_lite(i(t), 100, 100, 100,Stroke_Amplitude(t));
+    Fly_Master(t).chord_cut = i(t);
+    Fly_Master(t).span_cut = 100;
+    Fly_Master(t).Stroke_Amplitude = Stroke_Amplitude(t);
+end
 % % 
 % % % 
 % % % % Spanewise cut (I recomned only doing chord cuts for now)
@@ -37,128 +40,130 @@ current_time = datetime;
 % % 
 % % 
 % % %% Uncomment this section to run only one wing section
-LH_Chord_Cut = 50;
-LH_Span_Cut = 100;
-RH_Chord_Cut = 100;
-RH_Span_Cut = 100;
-% % % % 
-% % % % Main_Program_Run(LH_Chord_Cut, LH_Span_Cut, RH_Chord_Cut, RH_Span_Cut) 
-% % 
-% % 
-% % %% Uncomment this section to save data
-% % 
-% % % % Open a dialog box for the user to select a location and specify a file name
-% % % [filename, pathname] = uiputfile('Fly_Master.mat', 'Save data as');
-% % % 
-% % % % Check if the user canceled the operation
-% % % if isequal(filename, 0) || isequal(pathname, 0)
-% % %     disp('User canceled the operation.');
-% % % else
-% % %     % Construct the full file path
-% % %     fullpath = fullfile(pathname, filename);
-% % % 
-% % %     % Save the data to the selected location
-% % %     save(fullpath, 'Fly_Master');  
-% % % end
-% % 
-% % % save('C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Code\Main Code\Outputs\Fly_Master_Inverted_paper.mat', 'Fly_Master');
-% % 
-% % 
-% % %Filter data
-% % %Butter filter to compare to actual collected data
-% % [b, a] = butter(2, 0.25, 'low');
-% % 
-% % 
-% % for i=1:length(Fly_Master)
-% % 
-% % 
-% %     for j=1:3
-% %         Force_lh_f(j,:,i)=filtfilt(b, a, Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(j,:));
-% %         Force_rh_f(j,:,i)=filtfilt(b, a, Fly_Master(i).Fly.force_total.Force_Body_rh.force_Total(j,:));
-% %         Force_lh_f_mean(i,j) = mean(Force_lh_f(j,:,i));
-% %         Force_rh_f_mean(i,j) = mean(Force_rh_f(j,:,i));
-% %     end
-% % end
-% % 
-% % time = Fly_Master(1).Fly.time(1:112)/Fly_Master(1).Fly.time(112) * 100;
-% % 
-% % figure
-% % hold on
-% % for i=1
-% %     plot(time,Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(2,:)/Fly_Master(i).Fly.total.weight,"r")
-% %     plot(time,Force_lh_f(2,:,i)/Fly_Master(i).Fly.total.weight,"k--")
-% %     plot(time,mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(2,:))*ones(112)/Fly_Master(i).Fly.total.weight,"r")
-% %     plot(time,mean(Force_lh_f(2,:,i))*ones(112)/Fly_Master(i).Fly.total.weight,"k--")
-% %     legend(["Unfiltered" "Filtered"])
-% %     ylabel("Normalized Z Forces (F_z/mg)")
-% %     xlabel('Wingbeat Cylce (%)')
-% %     title("Filter: butter(2, 0.25, 'low')")
-% % end
-% % hold off
-% % 
-% % fly_num = 1;
-% % 
-% % figure
-% % hold on
-% % plot(time,Force_lh_f(2,:,fly_num)/Fly_Master(fly_num).Fly.total.weight,"r")
-% % plot(time,Force_rh_f(2,:,fly_num)/Fly_Master(fly_num).Fly.total.weight,"b")
-% % plot(time,(Force_lh_f(2,:,fly_num)+Force_rh_f(2,:,fly_num))/Fly_Master(fly_num).Fly.total.weight,"m")
-% % plot(time,mean(Force_rh_f(2,:,fly_num))*ones(112)/Fly_Master(fly_num).Fly.total.weight,"r--")
-% % plot(time,mean(Force_rh_f(2,:,fly_num))*ones(112)/Fly_Master(fly_num).Fly.total.weight,"b--")
-% % plot(time,mean(Force_lh_f(2,:,fly_num)+Force_rh_f(2,:,fly_num))*ones(112)/Fly_Master(fly_num).Fly.total.weight,"m--")
-% % legend(["Damaged" "Intact" "Total"])
-% % ylabel("Normalized Z Forces (F_z/mg)")
-% % xlabel('Wingbeat Cylce (%)')
-% % hold off
-% % 
-% % 
-% % % Uncomment this section to see the compiled data from the batch run
-% % 
-% % 
-% % 
-% % 
-% % for i=1:length(Fly_Master)
-% %     S_3_Ratio(i) = Fly_Master(i).Fly.total.S_3_Ratio;
-% %     S_2_Ratio(i) = Fly_Master(i).Fly.total.S_2_Ratio;
-% %     Force_X_mean(i) = (mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(1,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_rh.force_Total(1,:)))/Fly_Master(i).Fly.total.weight;
-% %     Force_Y_mean(i) = (-mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(3,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_rh.force_Total(3,:)))/Fly_Master(i).Fly.total.weight;
-% %     Force_Z_mean(i) = (mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_Total(2,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_rh.force_Total(2,:)))/Fly_Master(i).Fly.total.weight;
-% %     Force_f_X_mean_t(i) = (Force_lh_f_mean(i,1) + Force_rh_f_mean(i,1))/Fly_Master(i).Fly.total.weight;
-% %     Force_f_Y_mean_t(i) = (-Force_lh_f_mean(i,3) + Force_rh_f_mean(i,3))/Fly_Master(i).Fly.total.weight;
-% %     Force_f_Z_mean_t(i) = (Force_lh_f_mean(i,2) + Force_rh_f_mean(i,2))/Fly_Master(i).Fly.total.weight;
-% %     Moment_Roll_mean(i) = (mean(Fly_Master(i).Fly.force_total.Moments_Body_lh.moment_roll(:))/Fly_Master(i).Fly.wing_lh.wing_length - mean(Fly_Master(i).Fly.force_total.Moments_Body_rh.moment_roll(:))/Fly_Master(i).Fly.wing_rh.wing_length)/Fly_Master(i).Fly.total.weight;
-% %     Moment_Pitch_mean(i) = (mean(Fly_Master(i).Fly.force_total.Moments_Body_lh.moment_pitch(:))/Fly_Master(i).Fly.wing_lh.wing_length + mean(Fly_Master(i).Fly.force_total.Moments_Body_rh.moment_pitch(:))/Fly_Master(i).Fly.wing_rh.wing_length)/Fly_Master(i).Fly.total.weight;
-% %     Moment_Yaw_mean(i) = (mean(Fly_Master(i).Fly.force_total.Moments_Body_lh.moment_yaw(:))/Fly_Master(i).Fly.wing_lh.wing_length - mean(Fly_Master(i).Fly.force_total.Moments_Body_rh.moment_yaw(:))/Fly_Master(i).Fly.wing_rh.wing_length)/Fly_Master(i).Fly.total.weight;
-% % end
-% % 
-% % figure
-% % hold on
-% % plot(S_2_Ratio,Force_X_mean,'Color',[1, 0.5, 0])
-% % plot(S_2_Ratio,Force_Y_mean,'Color',"g")
-% % plot(S_2_Ratio,Force_Z_mean,'Color',"b")
-% % plot(S_2_Ratio, Force_f_X_mean_t, 'Color', [1, 0.5, 0], 'LineStyle', '--')
-% % plot(S_2_Ratio,Force_f_Y_mean_t,"g--")
-% % plot(S_2_Ratio,Force_f_Z_mean_t,"b--")
-% % legend(["X" "Y" "Z" "X_f_i_l_t_e_r_e_d" "Y_f_i_l_t_e_r_e_d" "Z_f_i_l_t_e_r_e_d"])
-% % ylabel("Normalized Forces (F/mg)")
-% % xlabel("Second moment of area Ration S_2")
-% % %axis([.5 1 0 1])
-% % hold off
-% % 
-% % figure
-% % hold on
-% % plot(S_3_Ratio,Moment_Roll_mean,'Color',[1, 0.5, 0])
-% % plot(S_3_Ratio,Moment_Pitch_mean,'Color',"g")
-% % plot(S_3_Ratio,Moment_Yaw_mean,'Color',"b")
-% % legend(["Roll" "Pitch" "Yaw"])
-% % ylabel("Normalized Torques (T/mgl)")
-% % xlabel("Third moment of area Ration S_3")
-% % %axis([.5 1 0 1])
-% % hold off
-% % 
-% % %% Run Time End
-% % Duration = datetime-current_time
-% % 
+% LH_Chord_Cut = 50;
+% LH_Span_Cut = 100;
+% RH_Chord_Cut = 100;
+% RH_Span_Cut = 100;
+% 
+%Main_Program_lite(LH_Chord_Cut, LH_Span_Cut, RH_Chord_Cut, RH_Span_Cut) 
+
+
+%% Uncomment this section to save data
+
+% % Open a dialog box for the user to select a location and specify a file name
+% [filename, pathname] = uiputfile('Fly_Master.mat', 'Save data as');
+% 
+% % Check if the user canceled the operation
+% if isequal(filename, 0) || isequal(pathname, 0)
+%     disp('User canceled the operation.');
+% else
+%     % Construct the full file path
+%     fullpath = fullfile(pathname, filename);
+% 
+%     % Save the data to the selected location
+%     save(fullpath, 'Fly_Master');  
+% end
+% 
+% save('C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Code\Main Code\Outputs\Fly_Master_Inverted_paper.mat', 'Fly_Master');
+
+
+% Filter data
+% Butter filter to compare to actual collected data
+[b, a] = butter(2, 0.25, 'low');
+
+
+for i=1:length(Fly_Master)
+
+
+    for j=1:3
+        Force_lh_f(j,:,i)=filtfilt(b, a, Fly_Master(i).Fly.force_total.Force_Body_lh.force_total_vec(j,:));
+        Force_rh_f(j,:,i)=filtfilt(b, a, Fly_Master(i).Fly.force_total.Force_Body_rh.force_total_vec(j,:));
+        Force_lh_f_mean(i,j) = mean(Force_lh_f(j,:,i));
+        Force_rh_f_mean(i,j) = mean(Force_rh_f(j,:,i));
+    end
+end
+
+time = Fly_Master(1).Fly.time(1:113)/Fly_Master(1).Fly.time(113) * 100;
+
+% figure
+% hold on
+% for i=1
+%     plot(time,Fly_Master(i).Fly.force_total.Force_Body_lh.force_total_vec(2,:)/Fly_Master(i).Fly.total.weight,"r")
+%     plot(time,Force_lh_f(2,:,i)/Fly_Master(i).Fly.total.weight,"k--")
+%     plot(time,mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_total_vec(2,:))*ones(112)/Fly_Master(i).Fly.total.weight,"r")
+%     plot(time,mean(Force_lh_f(2,:,i))*ones(112)/Fly_Master(i).Fly.total.weight,"k--")
+%     legend(["Unfiltered" "Filtered"])
+%     ylabel("Normalized Z Forces (F_z/mg)")
+%     xlabel('Wingbeat Cylce (%)')
+%     title("Filter: butter(2, 0.25, 'low')")
+% end
+% hold off
+
+fly_num = 1;
+
+figure
+hold on
+plot(time,Force_lh_f(2,:,fly_num)/Fly_Master(fly_num).Fly.total.weight,"r")
+plot(time,Force_rh_f(2,:,fly_num)/Fly_Master(fly_num).Fly.total.weight,"b")
+plot(time,(Force_lh_f(2,:,fly_num)+Force_rh_f(2,:,fly_num))/Fly_Master(fly_num).Fly.total.weight,"m")
+plot(time,mean(Force_rh_f(2,:,fly_num))*ones(113)/Fly_Master(fly_num).Fly.total.weight,"r--")
+plot(time,mean(Force_rh_f(2,:,fly_num))*ones(113)/Fly_Master(fly_num).Fly.total.weight,"b--")
+plot(time,mean(Force_lh_f(2,:,fly_num)+Force_rh_f(2,:,fly_num))*ones(113)/Fly_Master(fly_num).Fly.total.weight,"m--")
+legend(["Damaged" "Intact" "Total"])
+ylabel("Normalized Z Forces (F_z/mg)")
+xlabel('Wingbeat Cylce (%)')
+hold off
+
+
+%% Uncomment this section to see the compiled data from the batch run
+
+
+
+
+for i=1:length(Fly_Master)
+    S_3_Ratio(i) = Fly_Master(i).Fly.total.S_3_Ratio;
+    S_2_Ratio(i) = Fly_Master(i).Fly.total.S_2_Ratio;
+    Force_X_mean(i) = (mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_total_vec(1,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_rh.force_total_vec(1,:)))/Fly_Master(i).Fly.total.weight;
+    Force_Y_mean(i) = (-mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_total_vec(3,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_rh.force_total_vec(3,:)))/Fly_Master(i).Fly.total.weight;
+    Force_Z_mean(i) = (mean(Fly_Master(i).Fly.force_total.Force_Body_lh.force_total_vec(2,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_rh.force_total_vec(2,:)))/Fly_Master(i).Fly.total.weight;
+    Force_f_X_mean_t(i) = (Force_lh_f_mean(i,1) + Force_rh_f_mean(i,1))/Fly_Master(i).Fly.total.weight;
+    Force_f_Y_mean_t(i) = (-Force_lh_f_mean(i,3) + Force_rh_f_mean(i,3))/Fly_Master(i).Fly.total.weight;
+    Force_f_Z_mean_t(i) = (Force_lh_f_mean(i,2) + Force_rh_f_mean(i,2))/Fly_Master(i).Fly.total.weight;
+    % Moment_Roll_mean(i) = (mean(Fly_Master(i).Fly.force_total.Moments_Body_lh.moment_roll(:))/Fly_Master(i).Fly.wing_lh.wing_length - mean(Fly_Master(i).Fly.force_total.Moments_Body_rh.moment_roll(:))/Fly_Master(i).Fly.wing_rh.wing_length)/Fly_Master(i).Fly.total.weight;
+    % Moment_Pitch_mean(i) = (mean(Fly_Master(i).Fly.force_total.Moments_Body_lh.moment_pitch(:))/Fly_Master(i).Fly.wing_lh.wing_length + mean(Fly_Master(i).Fly.force_total.Moments_Body_rh.moment_pitch(:))/Fly_Master(i).Fly.wing_rh.wing_length)/Fly_Master(i).Fly.total.weight;
+    % Moment_Yaw_mean(i) = (mean(Fly_Master(i).Fly.force_total.Moments_Body_lh.moment_yaw(:))/Fly_Master(i).Fly.wing_lh.wing_length - mean(Fly_Master(i).Fly.force_total.Moments_Body_rh.moment_yaw(:))/Fly_Master(i).Fly.wing_rh.wing_length)/Fly_Master(i).Fly.total.weight;
+end
+
+figure
+hold on
+plot(Stroke_Amplitude,Force_X_mean,'Color',[1, 0.5, 0])
+plot(Stroke_Amplitude,Force_Y_mean,'Color',"g")
+plot(Stroke_Amplitude,Force_Z_mean,'Color',"b")
+plot(Stroke_Amplitude, Force_f_X_mean_t, 'Color', [1, 0.5, 0], 'LineStyle', '--')
+plot(Stroke_Amplitude,Force_f_Y_mean_t,"g--")
+plot(Stroke_Amplitude,Force_f_Z_mean_t,"b--")
+legend(["X" "Y" "Z" "X_f_i_l_t_e_r_e_d" "Y_f_i_l_t_e_r_e_d" "Z_f_i_l_t_e_r_e_d"])
+ylabel("Normalized Forces (F/mg)")
+xlabel("Second moment of area Ration S_2")
+% axis([.5 1 0 1])
+hold off
+
+% figure
+% hold on
+% plot(S_3_Ratio,Moment_Roll_mean,'Color',[1, 0.5, 0])
+% plot(S_3_Ratio,Moment_Pitch_mean,'Color',"g")
+% plot(S_3_Ratio,Moment_Yaw_mean,'Color',"b")
+% legend(["Roll" "Pitch" "Yaw"])
+% ylabel("Normalized Torques (T/mgl)")
+% xlabel("Third moment of area Ration S_3")
+% axis([.5 1 0 1])
+% hold off
+
+% Run Time End
+Duration = datetime-current_time
+
+return
+
 % % function [Fly] = Main_Program_Run(LH_Chord_Cut, LH_Span_Cut, RH_Chord_Cut, RH_Span_Cut) 
 
 %% Note on the Axese
@@ -173,7 +178,7 @@ RH_Span_Cut = 100;
 % z-axis is up
 % x-axis is to forward
 % y-axis is to the side (right positive)
-
+ 
 
 %% Clear Everything
 close all
@@ -186,16 +191,6 @@ digits(4); % sets decimal point accuracy
 [metrics, ~, ~] = get_metrics();
 rho = metrics.airDensity;
 g = metrics.gravity;
-
-%% Plot Choices
-% Select the plots you would like to see
-Plot_kinematics =  false;
-Plot_kinematic_Velocity = false;
-Plot_Forces_On_Wing =  false;
-Plot_Coefiecnts_of_lift_and_drag = false;
-Plot_Angles_and_Focres = false;
-Plot_Force_Over_Stroke = false;
-Plot_Angles_and_Focres_Normalized = true;
 
 %% Variable Decleration
 %Creates structures to manage data throughout the program
@@ -407,297 +402,6 @@ Fly.force_total.Force_Body_rh = Find_forces_XYZ(Wing_Element_rh, Force_Body_rh);
 % Not Complete
 Fly.force_total.Moments_Body_lh = Find_moments_XYZ(Wing_Element_lh, Force_Body_lh);
 Fly.force_total.Moments_Body_rh = Find_moments_XYZ(Wing_Element_rh, Force_Body_rh);
-%% Plot Forces on Wing
-
-if Plot_Forces_On_Wing == true
-
-    %Added Mass
-    figure
-    hold on
-    plot(Am_force_lh)
-    plot(Am_force_rh)
-    title('Added Mass force for the whole wing throughout a stroke')
-    legend(["LH" "RH"])
-    hold off
-
-    %Lift and Drag
-    figure 
-    hold on
-    plot(Lift_force_lh)
-    plot(Drag_force_lh)
-    plot(Lift_force_rh)
-    plot(Drag_force_rh)
-    title('Lift and Drag force for the whole wing throughout a stroke')
-    legend(["Lift - LH" "Drag - LH" "Lift - RH" "Drag - RH"])
-    hold off
-    
-    figure
-    hold on
-    plot(Force_Translation_lh)
-    plot(Force_Translation_rh)
-    title('Translation force for the whole wing throughout a stroke')
-    legend(["LH" "RH"])
-    hold off
-
-    figure
-    hold on
-    plot(Rot_force_lh)
-    plot(Rot_force_rh)
-    title('Rotational for the whole wing throughout a stroke')
-    legend(["LH" "RH"])
-    hold off
-
-end
-
-%% Plot Coefiecnts on Wing
-
-if Plot_Coefiecnts_of_lift_and_drag == true
-
-    %Coeficient of Lift and Drag
-    figure 
-    hold on
-    plot(C_L_lh)
-    plot(C_D_lh)
-    plot(C_L_rh)
-    plot(C_D_rh)
-    title('Coefiecnt of Lift and Drag force for the whole wing throughout a stroke')
-    legend(["C_L - LH" "C_D - LH" "C_L - RH" "C_D - RH"])
-    hold off
-    
-end
-
-%% Plot of Stroke Angle, Vertical Force, and Forward Force
-
-if Plot_Angles_and_Focres ==  true
-
-    figure
-    subplot(3,1,1)
-    hold on
-    plot(time,phi_f)
-    plot(time,phi_f,"--")
-    title('Stroke angle')
-    ylabel('Angle (deg)')
-    hold off
-    subplot(3,1,2)
-    hold on
-    plot(time(1:end-2),Fly.force_total.Force_Body_lh.force_Total(2,:))
-    plot(time(1:end-2),Fly.force_total.Force_Body_rh.force_Total(2,:))
-    title('Force in y-direction (Total Lift)')
-    ylabel('Force (N)')
-    hold off
-    subplot(3,1,3)
-    hold on
-    plot(time(1:end-2),Fly.force_total.Force_Body_lh.force_Total(1,:))
-    plot(time(1:end-2),Fly.force_total.Force_Body_rh.force_Total(1,:))
-    title('Force in x-direction (Total Drag)')
-    ylabel('Force (N)')
-    legend(["LH" "RH"])
-    hold off
-
-end
-
-
-%% Plot Figure 3 from Dickinson (2002)
-
-if Plot_Force_Over_Stroke == true
-
-    figure
-    hold on
-    plot(Fly.force_total.Force_Body_lh.force_Rot_vec(2,:), 'Color', [0.85, 0.1, 0.85])
-    plot(Fly.force_total.Force_Body_lh.force_AM_vec(2,1:112), 'Color', [0, 0.5, 1])
-    plot(Fly.force_components.Force_Translation_lh(:), 'g')
-    plot(Fly.force_total.Force_Body_lh.force_Rot_vec(2,:) + Fly.force_total.Force_Body_lh.force_AM_vec(2,1:112) + Fly.force_components.Force_Translation_lh(2,:), 'r')
-    title("Figure 3 (Lift) from Dickinson (2002)")
-    subtitle("for One Period (LH)")
-    legend(["Rotation" "Added Mass" "Translation" "Total"]);
-    hold off
-    
-    figure
-    hold on
-    plot(Fly.force_total.Force_Body_rh.force_Rot_vec(2,:), 'Color', [0.85, 0.1, 0.85])
-    plot(Fly.force_total.Force_Body_rh.force_AM_vec(2,1:112), 'Color', [0, 0.5, 1])
-    plot(Fly.force_components.Force_Translation_rh(:), 'g')
-    plot(Fly.force_total.Force_Body_rh.force_Rot_vec(2,:) + Fly.force_total.Force_Body_rh.force_AM_vec(2,1:112) + Fly.force_components.Force_Translation_rh(:), 'r')
-    title("Figure 3 (Lift) from Dickinson (2002)")
-    subtitle("for One Period (RH)")
-    legend(["Rotation" "Added Mass" "Translation" "Total"]);
-    hold off
-
-end
-
-%% Plot of Stroke Angle, Vertical Force, and Forward Force (Both Normalized)
-
-if Plot_Angles_and_Focres_Normalized == true
-
-    % Normalize the time vector to the range [0, 100]
-    time_normalized = (time(1:end-2) - min(time(1:end-2))) / (max(time(1:end-2)) - min(time(1:end-2))) * 100;
-
-    % Check the size of time_normalized and force vectors
-    len_time = length(time_normalized);
-    len_force_lh = length(Fly.force_total.Force_Body_lh.force_Total(2,:));
-    len_force_rh = length(Fly.force_total.Force_Body_rh.force_Total(2,:));
-
-    % Ensure the lengths match
-    N = min([len_time, len_force_lh, len_force_rh]);
-
-    % Truncate the vectors to match the shortest length
-    time_normalized = time_normalized(1:N);
-    phi_f = phi_f(1:N);
-    alpha_f = alpha_f(1:N);
-    gamma_f = gamma_f(1:N);
-
-    Fly.force_total.Force_Body_lh.force_Total = Fly.force_total.Force_Body_lh.force_Total(:,1:N);
-    Fly.force_total.Force_Body_rh.force_Total = Fly.force_total.Force_Body_rh.force_Total(:,1:N);
-
-    figure
-    subplot(4,1,1)
-    hold on
-    plot(time_normalized, phi_f, "m")
-    plot(time_normalized, alpha_f, "k")
-    plot(time_normalized, gamma_f, "g")
-    title('Stroke angle')
-    ylabel('Angle (deg)')
-    legend(["Phi" "Alpha" "Gamma"])
-    set(gca, 'XColor', 'none')
-    hold off
-    
-    subplot(4,1,2)
-    hold on
-    plot(time_normalized, (Fly.force_total.Force_Body_lh.force_Total(2,:) + Fly.force_total.Force_Body_rh.force_Total(2,:)) / Fly.total.weight, "m")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_Total(2,:) / Fly.total.weight, "r")
-    plot(time_normalized, Fly.force_total.Force_Body_rh.force_Total(2,:) / Fly.total.weight, "b")
-    plot(time_normalized, mean((Fly.force_total.Force_Body_lh.force_Total(2,:) + Fly.force_total.Force_Body_rh.force_Total(2,:)) / Fly.total.weight) * ones(size(time_normalized)), 'm--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_Total(2,:) / Fly.total.weight) * ones(size(time_normalized)), 'r--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_rh.force_Total(2,:) / Fly.total.weight) * ones(size(time_normalized)), 'b--')
-    ylabel('Vertical Force (F_z/mg)')
-    set(gca, 'XColor', 'none')
-    hold off
-
-    subplot(4,1,3)
-    hold on
-    plot(time_normalized, (Fly.force_total.Force_Body_lh.force_Total(1,:) + Fly.force_total.Force_Body_rh.force_Total(1,:)) / Fly.total.weight, "m")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_Total(1,:) / Fly.total.weight, "r")
-    plot(time_normalized, Fly.force_total.Force_Body_rh.force_Total(1,:) / Fly.total.weight, "b")
-    plot(time_normalized, mean((Fly.force_total.Force_Body_lh.force_Total(1,:) + Fly.force_total.Force_Body_rh.force_Total(1,:)) / Fly.total.weight) * ones(size(time_normalized)), 'm--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_Total(1,:) / Fly.total.weight) * ones(size(time_normalized)), 'r--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_rh.force_Total(1,:) / Fly.total.weight) * ones(size(time_normalized)), 'b--')
-    ylabel('Forward Force (F_x/mg)')
-    set(gca, 'XColor', 'none')
-    hold off
-    
-    subplot(4,1,4)
-    hold on
-    plot(time_normalized, (Fly.force_total.Force_Body_lh.force_Total(3,:) + Fly.force_total.Force_Body_rh.force_Total(3,:)) / Fly.total.weight, "m")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_Total(3,:) / Fly.total.weight, "r")
-    plot(time_normalized, Fly.force_total.Force_Body_rh.force_Total(3,:) / Fly.total.weight, "b")
-    plot(time_normalized, mean((Fly.force_total.Force_Body_lh.force_Total(3,:) + Fly.force_total.Force_Body_rh.force_Total(3,:)) / Fly.total.weight) * ones(size(time_normalized)), 'm--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_Total(3,:) / Fly.total.weight) * ones(size(time_normalized)), 'r--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_rh.force_Total(3,:) / Fly.total.weight) * ones(size(time_normalized)), 'b--')
-    ylabel('Side Force (F_y/mg)')
-    xlabel('Wingbeat Cycle (%)')
-    legend(["Total" "Left" "Right"])
-    hold off
-
-end
-
-
-
-
-%% Plot of Stroke Angle vs Each Force (Both Normalized)
-
-if Plot_Angles_and_Focres_Normalized == true
-
-    % Normalize the time vector to the range [0, 100]
-    time_normalized = (time(1:end-2) - min(time(1:end-2))) / (max(time(1:end-2)) - min(time(1:end-2))) * 100;
-
-    % Find the minimum length of all relevant arrays to avoid size mismatches
-    len_time = length(time_normalized);
-    len_force_total = length(Fly.force_total.Force_Body_lh.force_Total(2,:));
-    len_lift_vec = length(Fly.force_total.Force_Body_lh.force_lift_vec(2,:));
-    len_drag_vec = length(Fly.force_total.Force_Body_lh.force_drag_vec(2,:));
-    len_Rot_vec = length(Fly.force_total.Force_Body_lh.force_Rot_vec(2,:));
-    len_AM_vec = length(Fly.force_total.Force_Body_lh.force_AM_vec(2,:));
-
-    % Set the loop size to the smallest of these lengths
-    N = min([len_time, len_force_total, len_lift_vec, len_drag_vec, len_Rot_vec, len_AM_vec]);
-
-    % Truncate all arrays to the same length
-    time_normalized = time_normalized(1:N);
-    phi_f = phi_f(1:N);
-    alpha_f = alpha_f(1:N);
-    gamma_f = gamma_f(1:N);
-
-    Fly.force_total.Force_Body_lh.force_Total = Fly.force_total.Force_Body_lh.force_Total(:,1:N);
-    Fly.force_total.Force_Body_lh.force_lift_vec = Fly.force_total.Force_Body_lh.force_lift_vec(:,1:N);
-    Fly.force_total.Force_Body_lh.force_drag_vec = Fly.force_total.Force_Body_lh.force_drag_vec(:,1:N);
-    Fly.force_total.Force_Body_lh.force_Rot_vec = Fly.force_total.Force_Body_lh.force_Rot_vec(:,1:N);
-    Fly.force_total.Force_Body_lh.force_AM_vec = Fly.force_total.Force_Body_lh.force_AM_vec(:,1:N);
-
-    figure
-    subplot(4,1,1)
-    hold on
-    plot(time_normalized, phi_f, "m")
-    plot(time_normalized, alpha_f, "k")
-    plot(time_normalized, gamma_f, "g")
-    plot(time_normalized, zeros(length(phi_f)),"r:")
-    title('Stroke angle')
-    ylabel('Angle (deg)')
-    legend(["Phi" "Alpha" "Gamma"])
-    set(gca, 'XColor', 'none')
-    hold off
-
-    subplot(4,1,2)
-    hold on
-    plot(time_normalized, (Fly.force_total.Force_Body_lh.force_Total(2,:)) / Fly.total.weight, "m")
-    % plot(time_normalized, (Fly.force_total.Force_Body_lh.force_lift_vec(2,:)+Fly.force_total.Force_Body_lh.force_drag_vec(2,:)) / Fly.total.weight, "m")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_lift_vec(2,:) / Fly.total.weight, "r")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_drag_vec(2,:) / Fly.total.weight, "b")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_Rot_vec(2,:) / Fly.total.weight, "k")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_AM_vec(2,:) / Fly.total.weight, "y")
-    plot(time_normalized, mean((Fly.force_total.Force_Body_lh.force_Total(2,:)) / Fly.total.weight) * ones(size(time_normalized)), 'm--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_lift_vec(2,:) / Fly.total.weight) * ones(size(time_normalized)), 'r--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_drag_vec(2,:) / Fly.total.weight) * ones(size(time_normalized)), 'b--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_Rot_vec(2,:) / Fly.total.weight) * ones(size(time_normalized)), 'k--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_AM_vec(2,:) / Fly.total.weight) * ones(size(time_normalized)), 'y--')
-    ylabel('Vertical Force (F_z/mg)')
-    set(gca, 'XColor', 'none')
-    hold off
-
-    subplot(4,1,3)
-    hold on
-    plot(time_normalized, (Fly.force_total.Force_Body_lh.force_Total(1,:)) / Fly.total.weight, "m")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_lift_vec(1,:) / Fly.total.weight, "r")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_drag_vec(1,:) / Fly.total.weight, "b")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_Rot_vec(1,:) / Fly.total.weight, "k")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_AM_vec(1,:) / Fly.total.weight, "y")
-    plot(time_normalized, mean((Fly.force_total.Force_Body_lh.force_Total(1,:)) / Fly.total.weight) * ones(size(time_normalized)), 'm--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_lift_vec(1,:) / Fly.total.weight) * ones(size(time_normalized)), 'r--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_drag_vec(1,:) / Fly.total.weight) * ones(size(time_normalized)), 'b--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_Rot_vec(1,:) / Fly.total.weight) * ones(size(time_normalized)), 'k--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_AM_vec(1,:) / Fly.total.weight) * ones(size(time_normalized)), 'y--')
-    ylabel('Forward Force (F_x/mg)')
-    set(gca, 'XColor', 'none')
-    hold off
-
-    subplot(4,1,4)
-    hold on
-    plot(time_normalized, (Fly.force_total.Force_Body_lh.force_Total(3,:)) / Fly.total.weight, "m")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_lift_vec(3,:) / Fly.total.weight, "r")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_drag_vec(3,:) / Fly.total.weight, "b")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_Rot_vec(3,:) / Fly.total.weight, "k")
-    plot(time_normalized, Fly.force_total.Force_Body_lh.force_AM_vec(3,:) / Fly.total.weight, "y")
-    plot(time_normalized, mean((Fly.force_total.Force_Body_lh.force_Total(3,:)) / Fly.total.weight) * ones(size(time_normalized)), 'm--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_lift_vec(3,:) / Fly.total.weight) * ones(size(time_normalized)), 'r--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_drag_vec(3,:) / Fly.total.weight) * ones(size(time_normalized)), 'b--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_Rot_vec(3,:) / Fly.total.weight) * ones(size(time_normalized)), 'k--')
-    plot(time_normalized, mean(Fly.force_total.Force_Body_lh.force_AM_vec(3,:) / Fly.total.weight) * ones(size(time_normalized)), 'y--')
-    ylabel('Side Force (F_y/mg)')
-    xlabel('Wingbeat Cycle (%)')
-    legend(["Total" "Lift" "Drag" "Rotation" "Added Mass"])
-    hold off
-
-end
-
 
 %% End of Code Timer
 toc

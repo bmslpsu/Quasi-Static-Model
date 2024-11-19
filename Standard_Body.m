@@ -1,15 +1,17 @@
-function [Body_Shape] = Standard_Body(plot_num)
+function [Body_Shape, Joint] = Standard_Body(plot_num)
 %% Standard Body Model
 
 %% Load data
 
 load(['Data_Sets' filesep 'Dataset_S1.mat'], 'body_model')
 
-%% Left Wing
-% % Extract data for current dataset
+%% Extract data for current dataset
 Body_Shape.Body_x = body_model.x_mod;
 Body_Shape.Body_y = body_model.y_mod;
 Body_Shape.Body_z = body_model.z_mod;
+
+%% Joint
+Joint = body_model.Joint_right;
 
 %% Plot Body
 

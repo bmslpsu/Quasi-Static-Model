@@ -1,7 +1,7 @@
-function [Wing_Shape_lh, Wing_Shape_rh, Body_Shape] = wingPlotGUI(Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Wing_Shapes_Given, lhSpanwiseCut, lhChordwiseCut, rhSpanwiseCut, rhChordwiseCut)
+function [Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Joint] = wingPlotGUI(Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Wing_Shapes_Given, lhSpanwiseCut, lhChordwiseCut, rhSpanwiseCut, rhChordwiseCut)
    
     % Global variables
-    global Wing_Shape_lh Wing_Shape_rh Body_Shape
+    global Wing_Shape_lh Wing_Shape_rh Body_Shape Joint
 
     if Wing_Shapes_Given == true
         [~, ~, ~, ~, ~, ~, lhWingLength_Max, lhChordLength_Max, rhWingLength_Max, rhChordLength_Max] = Standard_Wing(0, 0, 100, 100, 0, 0, 100, 100);
@@ -141,9 +141,9 @@ end
 function Wing_Chossen(lhWingLength, lhChordLength, lhSpanwiseCut, lhChordwiseCut, rhWingLength, rhChordLength, rhSpanwiseCut, rhChordwiseCut, fig)
     [Wing_left_x_data, Wing_left_y_data, Wing_left_z_data, Wing_right_x_data, Wing_right_y_data, Wing_right_z_data] = Standard_Wing(lhWingLength, lhChordLength, lhSpanwiseCut, lhChordwiseCut, rhWingLength, rhChordLength, rhSpanwiseCut, rhChordwiseCut);
 
-    global Wing_Shape_lh Wing_Shape_rh Body_Shape
+    global Wing_Shape_lh Wing_Shape_rh Body_Shape Joint
 
-    Body_Shape = Standard_Body(0);
+    [Body_Shape, Joint] = Standard_Body(0);
 
     %lh wing
     Wing_Shape_lh.Wing_x = Wing_left_x_data;

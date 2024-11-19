@@ -1,10 +1,4 @@
-function [wing_lh, wing_rh, body]  = mass_and_inertia(Wing_Shape_lh, Wing_Shape_rh, Body_Shape)
-
-%% Variable Decleration
-wing_lh = struct();
-wing_rh = struct();
-body = struct();
-
+function [Fly]  = mass_and_inertia(Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Fly)
 
 %% Get standard data
 [metrics, fly_body, fly_wing] = get_metrics();
@@ -125,10 +119,10 @@ abdomen.inertia = inertia;
 %% Total Body
 % Sum head, thorax, and abdomen
 
-body.volume = head.volume + thorax.volume + abdomen.volume;
-body.mass = head.mass + thorax.mass + abdomen.mass;
-body.CG = head.mass*head.CG + thorax.mass*thorax.CG + abdomen.mass*abdomen.CG;
-body.inertia = head.inertia  + thorax.inertia  + abdomen.inertia;
+Fly.body.volume = head.volume + thorax.volume + abdomen.volume;
+Fly.body.mass = head.mass + thorax.mass + abdomen.mass;
+Fly.body.CG = (head.mass*head.CG + thorax.mass*thorax.CG + abdomen.mass*abdomen.CG) / Fly.body.mass;
+Fly.body.inertia = head.inertia  + thorax.inertia  + abdomen.inertia;
 
 %% Wing_LH
 %Calculate Mass, CG, Intertia, and surface area??
@@ -165,14 +159,17 @@ Izz = (1/12) * fly_wing.density * z_thickness * sum(x.^2 + y.^2);
 Ixy = -(1/24) * fly_wing.density * z_thickness * sum(x .* y);
 Ixz = -(1/24) * fly_wing.density * z_thickness * sum(x .* z);
 Iyz = -(1/24) * fly_wing.density * z_thickness * sum(y .* z);
-inertia = [Ixx, Ixy, Ixz; Ixy, Iyy, Iyz; Ixz, Iyz, Izz];
+inertia = [...
+    Ixx, Ixy, Ixz;...
+    Ixy, Iyy, Iyz;...
+    Ixz, Iyz, Izz];
 
 %Place in wing_lh structure
-wing_lh.area = Area;
-wing_lh.volume = volume;
-wing_lh.CG = CG;
-wing_lh.mass = mass;
-wing_lh.inertia = inertia;
+Fly.wing_LH.area = Area;
+Fly.wing_LH.volume = volume;
+Fly.wing_LH.CG = CG;
+Fly.wing_LH.mass = mass;
+Fly.wing_LH.inertia = inertia;
 
 %% Wing_RH
 %Calculate Mass, CG, Intertia, and surface area??
@@ -205,17 +202,17 @@ CG = [X_CG, Y_CG, Z_CG];
 Ixx = (1/12) * fly_wing.density * z_thickness * sum(y.^2 + z.^2);
 Iyy = (1/12) * fly_wing.density * z_thickness * sum(x.^2 + z.^2);
 Izz = (1/12) * fly_wing.density * z_thickness * sum(x.^2 + y.^2);
-Ixy = -(1/24) * fly_wing.density * z_thickness * sum(x .* y);
+Ixy = -(1/24) * fly_wing.density * z_thickness * sum(x .* abs(y));
 Ixz = -(1/24) * fly_wing.density * z_thickness * sum(x .* z);
-Iyz = -(1/24) * fly_wing.density * z_thickness * sum(y .* z);
+Iyz = -(1/24) * fly_wing.density * z_thickness * sum(abs(y) .* z);
 inertia = [Ixx, Ixy, Ixz; Ixy, Iyy, Iyz; Ixz, Iyz, Izz];
 
 %Place in wing_rh structure
-wing_rh.area = Area;
-wing_rh.volume = volume;
-wing_rh.CG = CG;
-wing_rh.mass = mass;
-wing_rh.inertia = inertia;
+Fly.wing_RH.area = Area;
+Fly.wing_RH.volume = volume;
+Fly.wing_RH.CG = CG;
+Fly.wing_RH.mass = mass;
+Fly.wing_RH.inertia = inertia;
 
 
 %% Define Joint Locations
@@ -314,5 +311,10 @@ wing_rh.inertia = inertia;
 % % MwR(6, 6) = wing_rh.inertia(3, 3);
 % % 
 % % wing_rh.MwR = MwR;
+
+%% Fly Total
+Fly.total.mass = Fly.body.mass + Fly.wing_LH.mass + Fly.wing_RH.mass;
+Fly.total.weight = Fly.total.mass * metrics.gravity; %(g*mm/s^2)
+Fly.total.CG = (Fly.body.mass*Fly.body.CG + Fly.wing_LH.mass*Fly.wing_LH.CG + Fly.wing_RH.mass*Fly.wing_RH.CG)/Fly.total.mass;
 
 end

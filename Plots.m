@@ -1,10 +1,10 @@
 figure
 hold on
-plot(alpha_f/(max(alpha_f)))
-plot(alpha_dotf/(max(alpha_dotf)))
-plot(alpha_dot_dotf/(max(alpha_dot_dotf)))
-legend(["\alpha" "\alpha_d_o_t" "\alpha_d_o_t_ _d_o_t"])
-title("\alpha Analyis")
+plot(psi/(max(psi)))
+plot(psi_dot/(max(psi_dot)))
+plot(psi_dot_dot/(max(psi_dot_dot)))
+legend(["\psi" "\psi_d_o_t" "\psi_d_o_t_ _d_o_t"])
+title("\psi Analyis")
 hold off
 
 figure
@@ -19,19 +19,19 @@ hold off
 %%
 figure
 hold on
-plot(gamma_f/(max(gamma_f)))
-plot(gamma_dotf/(max(gamma_dotf)))
-plot(gamma_dot_dotf/(max(gamma_dot_dotf)))
-legend(["\gamma" "\gamma_d_o_t" "\gamma_d_o_t_ _d_o_t"])
-title("\gamma Analyis")
+plot(beta/(max(beta)))
+plot(beta_dot/(max(beta_dot)))
+plot(beta_dot_dot/(max(beta_dot_dot)))
+legend(["\beta" "\beta_d_o_t" "\beta_d_o_t_ _d_o_t"])
+title("\beta Analyis")
 hold off
 
 %%
 figure
 hold on
-plot(phi_f/(max(phi_f)))
-plot(phi_dotf/(max(phi_dotf)))
-plot(phi_dot_dotf/(max(phi_dot_dotf)))
+plot(phi/(max(phi)))
+plot(phi_dot/(max(phi_dot)))
+plot(phi_dot_dot/(max(phi_dot_dot)))
 legend(["\phi" "\phi_d_o_t" "\phi_d_o_t_ _d_o_t"])
 title("\phi Analyis")
 hold off
@@ -122,7 +122,7 @@ hold off
 %%
 figure
 hold on
-plot((Wing_Element_lh(4).linear_vel(:,:)').^2)
+plot((Wing_Element_lh(20).linear_vel(:,:)'))
 legend(["X" "Y" "Z"])
 title("Linear Velocity")
 hold off
@@ -130,6 +130,13 @@ hold off
 %%
 figure
 hold on
-plot((Wing_Element_lh(4).linear_vel_norm(:)').^2)
+plot((Wing_Element_lh(20).linear_vel_norm(:)').^2)
 title("Linear Velocity")
+hold off
+
+%%
+figure
+hold on
+plot(Wing_Element_lh(20).linear_vel_direction')
+title("Linear Velocity Direction")
 hold off
