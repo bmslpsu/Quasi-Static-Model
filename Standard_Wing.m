@@ -25,7 +25,7 @@ bottom_z = Wing_left_z_data(y_max_index:end);
 % Define the original parameter t for interpolation
 t_top = linspace(0, 1, length(top_x));
 t_bottom = linspace(0, 1, length(bottom_x));
-t_new = linspace(0, 1, 21); % 101 points for top and bottom
+t_new = linspace(0, 1, 21); % 21 points for top and bottom
 
 % Interpolate top and bottom parts separately
 interp_top_y = interp1(t_top, top_y, t_new, 'cubic');
@@ -82,6 +82,13 @@ indexToKeep = Wing_left_y_data <= Cut_spot*1.00000001;
 Wing_left_x_data = Wing_left_x_data(indexToKeep);
 Wing_left_y_data = Wing_left_y_data(indexToKeep);
 Wing_left_z_data = Wing_left_z_data(indexToKeep);
+
+if mod(length(Wing_left_x_data),2) == 0
+    middleIndex = floor(length(Wing_left_x_data) / 2);
+    Wing_left_x_data(middleIndex) = [];
+    Wing_left_y_data(middleIndex) = [];
+    Wing_left_z_data(middleIndex) = [];
+end
 
 %% Right Wing
 % Extract data for current dataset
@@ -161,6 +168,13 @@ indexToKeep = Wing_right_y_data >= Cut_spot*1.00000001;
 Wing_right_x_data = Wing_right_x_data(indexToKeep);
 Wing_right_y_data = Wing_right_y_data(indexToKeep);
 Wing_right_z_data = Wing_right_z_data(indexToKeep);
+
+if mod(length(Wing_right_x_data),2) == 0
+    middleIndex = floor(length(Wing_right_x_data) / 2);
+    Wing_right_x_data(middleIndex) = [];
+    Wing_right_y_data(middleIndex) = [];
+    Wing_right_z_data(middleIndex) = [];
+end
 
 
 end

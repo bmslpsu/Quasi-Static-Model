@@ -18,10 +18,9 @@ function [forces_torque] = Torque_Forces(Fly, element, wing, R_inv2, force, side
 
     for j = 1:N
         total_cop_temp = [0; 0; 0];
-        Total_force_temp = [0; 0; 0];
         Total_force_temp_2 = [0; 0; 0];
         for i = 1:length(element)
-            Total_force_temp = element(i).force_Lift(j)+element(i).force_Drag(j)+element(i).force_Rotation(j)+element(i).force_AddedMass(j);
+            Total_force_temp = element(i).force_Lift(j) + element(i).force_Drag(j) + element(i).force_Rotation(j) + element(i).force_AddedMass(j);
             Total_force_temp_2 = Total_force_temp_2 + Total_force_temp;
             total_cop_temp = total_cop_temp + Total_force_temp .* element(i).locationInMovingFrame(1:3,j);
         end
