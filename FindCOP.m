@@ -1,67 +1,43 @@
-function element=FindCOP(psi,n,c,R_inv2,wing_length)
+function element = FindCOP(psi, n, c, R_inv2, wing_length)
     %% Starting message
-    disp('Location of COP Calculation - Start')
+    disp('Location of COP Calculation - Start');
+
+    % For the wing
+    % x-axis is along the length of the wing (Root to Tip)
+    % y-axis is perpendicular to the surface of the wing
+    % z-axis is along the chord of the wing starting and is parallel to the abdomen of the fly
     
-    %% Find the location of center of pressure
+    %% Parameters and Precomputations
+    delz = wing_length / n;             % Length of each wing element
 
-    delz = wing_length / n;                  % Precompute delz
-    psi = abs(psi);         % Precompute radians once
-
-    x_cp = zeros(n, length(psi));          % Preallocate x_cp array
-    element(n).Distance_COP = [];            % Preallocate struct array
+    % Preallocate arrays
+    N = length(psi);
+    x_cp = zeros(n, N);                 % x-coordinate of COP for each element and timestep
+    element(n).Distance_COP = [];       % Preallocate struct array for n elements
 
     % Preallocate vectors for efficiency
-    r_cp_vec = zeros(3, length(psi));      
-    r_cp = zeros(3, length(psi));
+    r_cp_vec = zeros(3, N);    % COP vector in moving frame
+    r_cp = zeros(3, N);        % COP vector in stationary frame
 
-    % figure;
-    % hold on;
-
+    %% Main Computation Loop
     for j = 1:n
-        % Calculate x_cp for the current element
-        x_cp(j, :) = c(j) * (0.82 * psi / pi + 0.05);
+        % Compute vectors for all timesteps in one go (vectorized)
+        r_cp_vec(1, :) = delz / 2 + delz * (j - 1);                 % x-component of the COP
+        r_cp_vec(2, :) = 0;                                         % y-component is zero
+        r_cp_vec(3, :) = 0; %c(j) * (0.82 * abs(psi) / pi + 0.05);      % z-component (along the chord) % Based on paper: 2008 Dickson Integrative...
 
-        % Iterate over each time step
-        for i = 1:length(x_cp(j,:))
-            % Vector to center of pressure for element j
-            r_cp_vec(:, i) = [delz/2 + delz*(j - 1); 0; x_cp(j, i)];
-            %r_cp_vec(:, i) = [delz/2 + delz*(j - 1); 0; 0]; %Zafar model
 
-            % Rotate the vector using the inverse rotation matrix R_inv2
+        % Rotate vectors using R_inv2 for all timesteps
+        for i = 1:N
             r_cp(:, i) = R_inv2(:, :, i) * r_cp_vec(:, i);
-
-            % Store the distance of COP
-            element(j).Distance_COP(i) = norm(r_cp(:, i));
         end
-        % plot(r_cp(1,:)')
 
-        % Store location data for the element
-        element(j).location_cop = r_cp;
-        element(j).locationInMovingFrame = r_cp_vec;
+        % Store results for element j
+        element(j).Distance_COP = vecnorm(r_cp, 2, 1);  % Compute COP distances (norms)
+        element(j).location_cop = r_cp;                 % COP in body frame
+        element(j).locationInMovingFrame = r_cp_vec;    % COP in wing frame
     end
 
-    % hold off;
-
-    % figure
-    % plot(x_cp(:,:)')
-    % disp('Complete for entire wing');
-    
     %% Ending message
-    disp('Location of COP Calculation - End')
-    
-    %% test plot for the center of pressure
-
-    % figure
-    % hold on
-    % for j=1:length(element)
-    %     plot3(element(j).location_cop(1,1),element(j).location_cop(2,1),element(j).location_cop(3,1),'*');
-    %     plot3(element(j).location_cop(1,end),element(j).location_cop(2,end),element(j).location_cop(3,end),'x');
-    %     plot3(element(j).location_cop(1,:),element(j).location_cop(2,:),element(j).location_cop(3,:));  
-    % end
-    % legend(["Start" "End"])
-    % title({'Location of centor of pressure for all element throughout', 'a wingstroke in the statonary wing frame'})
-    % view([-40.1999996505678 27.6000011477619]);
-    % grid on;
-    % hold off
-
+    disp('Location of COP Calculation - End');
 end

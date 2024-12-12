@@ -1,82 +1,53 @@
 function [element, Rot_wing_force, Rot_wing_torque] = Force_Rotational(element, Kinematics, del_r, c, rho, weight)
     %% Preamble
-    % This function will find only the magnitude, not the direction.
-    
-    % Units
-    % del_r (mm)
-    % c (mm)
+    % Calculates rotational forces and torques for a flapping wing model.
+    % Forces and torques are computed for each wing element over time.
 
-    %% Starting message
-    disp('Rotation Force Calculation - Start') 
+    % Units:
+    % - del_r (mm): Length of each wing segment
+    % - c (mm): Chord length of each segment
 
-    %% Array sizing
-    N = length(Kinematics.psi_d);
+    %% Starting Message
+    disp('Rotation Force Calculation - Start');
 
-    %% Array initialization
+    %% Initialize Parameters
+    N = length(Kinematics.psi_d);           % Number of time steps
+    num_elements = length(element);         % Number of wing elements
+
+    % Preallocate force and torque arrays
     Rot_wing_force = zeros(3, N);
     Rot_wing_torque = zeros(3, N);
-    
-    %% C_R calculation
+
+    % Rotational force coefficient
     C_r = 1.55;
 
-    %% Entire wing Calculation
-    for j = 1:N
-        Rot_wing_temp = [0;0;0];
-        Rot_wing_torque_temp = [0;0;0];
+    %% Main Computation
+    for j = 1:N % Loop over time steps
+        % Temporary accumulators for the entire wing at time step j
+        Rot_wing_temp = zeros(3, 1);
+        Rot_wing_torque_temp = zeros(3, 1);
 
-        for i = 1:length(element)
-            % Element wise Calculation
-            element(i).force_Rotation(j) = C_r * rho * (c(i))^2 * del_r * element(i).linear_vel_norm(j) * Kinematics.psi_d(j);
+        for i = 1:num_elements % Loop over each wing element
+            %% Rotational Force Calculation
+            % Element-wise rotational force magnitude
+            element(i).force_Rotation(j) = C_r * rho * c(i)^2 * del_r * element(i).linear_vel_norm(j) * Kinematics.psi_d(j);
 
-            % Force Direction
-            Rotation_Direction = [0; 1; 0];  %Force is normal to the wing and in the velocity direction % Same as Zafar's model and 2008 Dickson
+            % Force direction (normal to wing surface, in velocity direction)
+            Rotation_Direction = [0; 1; 0]; % Consistent with Zafar's model and 2008 Dickinson
 
-            %Force for entire Element
-            Force_element = element(i).force_Rotation(j).*Rotation_Direction;
+            % Compute rotational force vector for the element
+            Force_element = element(i).force_Rotation(j) * Rotation_Direction;
 
-            %Force for entire Element
+            % Accumulate rotational force and torque
             Rot_wing_temp = Rot_wing_temp + Force_element;
-
-            %Torque for entire Element
-            Rot_wing_torque_temp = Rot_wing_torque_temp + cross(element(i).locationInMovingFrame(1:3,j),Force_element); 
-        
+            Rot_wing_torque_temp = Rot_wing_torque_temp + cross(element(i).locationInMovingFrame(:, j), Force_element);
         end
 
-        %% Forces over entire kinematics (time)
-        Rot_wing_force(:,j) = Rot_wing_temp;
-
-        %% Torques over entire kinematics (time)
-        Rot_wing_torque(:,j) = Rot_wing_torque_temp;
+        %% Store Total Forces and Torques for Time Step
+        Rot_wing_force(:, j) = Rot_wing_temp;
+        Rot_wing_torque(:, j) = Rot_wing_torque_temp;
     end
-        
-    %% Ending message
-    disp('Rotation Force Calculation - End') 
-    %%  Plot
-    % Plot for the X-direction
-    % figure
-    % hold on
-    % plot(Rot_force(1,:)./weight, 'b') % X-direction in blue
-    % plot(ones(1, length(Rot_force(1,:))) * mean(Rot_force(1,:)./weight), 'b--') % Mean X as dashed line
-    % title(['ROT wing force - X direction, stroke ,1'])
-    % legend(["ROT wing force X", "Mean ROT wing force X"])
-    % hold off
-    % 
-    % % Plot for the Y-direction
-    % figure
-    % hold on
-    % plot(Rot_force(2,:)./weight, 'b') % Z-direction in red
-    % plot(ones(1, length(Rot_force(2,:))) * mean(Rot_force(2,:)./weight), 'b--') % Mean Z as dashed line
-    % title(['ROT wing force - Z direction, stroke ,2'])
-    % legend(["ROT wing force Z", "Mean ROT wing force Z"])
-    % hold off
-    % 
-    % % Plot for the Z-direction
-    % figure
-    % hold on
-    % plot(Rot_force(3,:)./weight, 'b') % Y-direction in green
-    % plot(ones(1, length(Rot_force(3,:))) * mean(Rot_force(3,:)./weight), 'b--') % Mean Y as dashed line
-    % title(['ROT wing force - Y direction, stroke ,3'])
-    % legend(["ROT wing force Y", "Mean ROT wing force Y"])
-    % hold off
 
+    %% Ending Message
+    disp('Rotation Force Calculation - End');
 end

@@ -11,6 +11,6 @@ function [metrics, fly_body, fly_wing] = get_metrics()
 
     %% Wing parameters
     fly_wing.density = 1.1e-3 ; %g/mm^3 %1990_Zanker_The Wing Beat of Drosophila Melanogaster. II. Dynamics
-    fly_wing.thickness = 2.6 *10^-3; %mm  %1990_Zanker_The Wing Beat of Drosophila Melanogaster. II. Dynamics
+    fly_wing.thickness = 2 *10^-3; %mm  %1990_Zanker_The Wing Beat of Drosophila Melanogaster. II. Dynamics
     
 end

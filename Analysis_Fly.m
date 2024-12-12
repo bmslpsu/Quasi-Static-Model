@@ -8,8 +8,8 @@ function [Fly] = Analysis_Fly(LH_Chord_Cut, LH_Span_Cut, RH_Chord_Cut, RH_Span_C
 
 % For the body
 % z-axis is up
-% y-axis is to forward
-% x-axis is to the side (right positive)
+% y-axis is forward
+% x-axis is the side (right positive)
 
 %% Runtime
 current_time = datetime;
@@ -40,6 +40,8 @@ dt=.000125;
 %% Kinematic data
 Kinematics_LH = Kin(FilteredAngleL(period,2), FilteredAngleL(period,1).*LH_Stroke_Amplitude/100, FilteredAngleL(period,3), 0, dt);
 Kinematics_RH = Kin(FilteredAngleR(period,2), FilteredAngleR(period,1).*RH_Stroke_Amplitude/100, FilteredAngleR(period,3), 0, dt);
+Fly.Kinematics_LH = Kinematics_LH;
+Fly.Kinematics_RH = Kinematics_RH;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Wing and Boddy Selection
@@ -90,8 +92,8 @@ Wing_Element_RH = FindLinearVelocity(Wing_Element_RH, Kinematics_RH.omega, Kinem
 [Wing_Element_RH, Fly.force_components.rh.AM_force, Fly.force_components.rh.AM_torque] = Force_AddedMass(Wing_Element_RH,  Kinematics_RH, Fly.wing_RH.del_r, Fly.wing_RH.c, metrics.airDensity, Fly.total.weight);
 
 %% Torque due to Inertia
-[Wing_Element_LH, Fly.force_components.lh.Inertia_torque] = Torque_Inertia(Wing_Element_LH,  Kinematics_LH, Fly.wing_LH.inertia);
-[Wing_Element_RH, Fly.force_components.rh.Inertia_torque] = Torque_Inertia(Wing_Element_RH,  Kinematics_RH, Fly.wing_RH.inertia);
+[Wing_Element_LH, Fly.force_components.lh.Inertia_torque] = Torque_Inertia(Wing_Element_LH,  Kinematics_LH, Fly.wing_LH.inertia, Kinematics_LH.R_inv2);
+[Wing_Element_RH, Fly.force_components.rh.Inertia_torque] = Torque_Inertia(Wing_Element_RH,  Kinematics_RH, Fly.wing_RH.inertia, Kinematics_RH.R_inv2);
 
 %% Find Force Directions
 Fly.force_total.Force_Body_LH = FindForceVectors(Fly.force_components.lh, Kinematics_LH.R_inv2);
@@ -107,6 +109,7 @@ Fly.force_total.Force_Body_RH = FindTorqueVectors(Fly.force_components.rh, Kinem
 
 %% End of Code Timer
 toc
+    
 end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Functions---------------------------------------------------------------

@@ -25,7 +25,7 @@ Stroke_Amplitude_RH = [100 100 100 100 100 100];
 
 % Chordwise cut
 for i=1:length(Stroke_Amplitude_LH)
-    Fly_Master(i).Fly  = Analyis_Robot(Wing_damage_LH(i), Wing_damage_RH(i), 100, 100,Stroke_Amplitude_LH(i),Stroke_Amplitude_RH(i), i);
+    Fly_Master(i).Fly  = Analysis_Robot(Wing_damage_LH(i), Wing_damage_RH(i), 100, 100,Stroke_Amplitude_LH(i),Stroke_Amplitude_RH(i), i);
     Fly_Master(i).chord_cut_LH = Wing_damage_LH(i);
     Fly_Master(i).chord_cut_RH = Wing_damage_RH(i);
     Fly_Master(i).span_cut = 100;
@@ -73,30 +73,30 @@ for i=1:length(Fly_Master)
 end
 
 %% S_2 versus force
-% figure
-% hold on
-% plot(S_2_Ratio,Force_X_mean,'Color',[1, 0.5, 0])
-% plot(S_2_Ratio,Force_Y_mean,'Color',"g")
-% plot(S_2_Ratio,Force_Z_mean,'Color',"b")
-% 
-% legend(["X" "Y" "Z"])
-% ylabel("Normalized Forces (F/mg)")
-% xlabel("Second moment of area Ration S_2")
-% % axis([.5 1 0 1])
-% hold off
+figure
+hold on
+plot(S_2_Ratio,Force_X_mean,'Color',[1, 0.5, 0])
+plot(S_2_Ratio,Force_Y_mean,'Color',"g")
+plot(S_2_Ratio,Force_Z_mean,'Color',"b")
+
+legend(["X" "Y" "Z"])
+ylabel("Normalized Forces (F/mg)")
+xlabel("Second moment of area Ration S_2")
+% axis([.5 1 0 1])
+hold off
 
 %% Stroke Amplitude versus force
-% figure
-% hold on
-% plot(Stroke_Amplitude_LH,Force_X_mean,'Color',[1, 0.5, 0])
-% plot(Stroke_Amplitude_LH,Force_Y_mean,'Color',"g")
-% plot(Stroke_Amplitude_LH,Force_Z_mean,'Color',"b")
-% 
-% legend(["X" "Y" "Z"])
-% ylabel("Normalized Forces (F/mg)")
-% xlabel("Stroke Amplitude")
-% % axis([.5 1 0 1])
-% hold off
+figure
+hold on
+plot(Stroke_Amplitude_LH,Force_X_mean,'Color',[1, 0.5, 0])
+plot(Stroke_Amplitude_LH,Force_Y_mean,'Color',"g")
+plot(Stroke_Amplitude_LH,Force_Z_mean,'Color',"b")
+
+legend(["X" "Y" "Z"])
+ylabel("Normalized Forces (F/mg)")
+xlabel("Stroke Amplitude")
+% axis([.5 1 0 1])
+hold off
 
 %% Torques means
 
@@ -124,15 +124,15 @@ xlabel("Third moment of area Ration S_3")
 hold off
 
 %% Stroke Amplitude versus torque
-% figure
-% hold on
-% plot(Stroke_Amplitude_LH,Moment_Roll_mean,'Color',[1, 0.5, 0])
-% plot(Stroke_Amplitude_LH,Moment_Pitch_mean,'Color',"g")
-% plot(Stroke_Amplitude_LH,Moment_Yaw_mean,'Color',"b")
-% legend(["Roll" "Pitch" "Yaw"])
-% ylabel("Normalized Torques (T/mgl)")
-% xlabel("Stroke Amplitude")
-% %axis([.5 1 0 1])
-% hold off
+figure
+hold on
+plot(Stroke_Amplitude_LH,Moment_Roll_mean,'Color',[1, 0.5, 0])
+plot(Stroke_Amplitude_LH,Moment_Pitch_mean,'Color',"g")
+plot(Stroke_Amplitude_LH,Moment_Yaw_mean,'Color',"b")
+legend(["Roll" "Pitch" "Yaw"])
+ylabel("Normalized Torques (T/mgl)")
+xlabel("Stroke Amplitude")
+%axis([.5 1 0 1])
+hold off
 %% Run Time End
 Duration = datetime-current_time

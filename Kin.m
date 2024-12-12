@@ -1,7 +1,21 @@
 function Kinematics = Kin(Rotation, Stroke, Deviation, rad_or_deg, dt)
-    
-    %% Angular Postion (Kinematic data)
-    if rad_or_deg == 0 %deg = 0 & rad = 1
+    %% Preamble
+    % KIN - Calculate the angular position, velocity, acceleration, and dynamics
+    %       of a wing in a flapping wing model.
+    %
+    % Inputs:
+    %   Rotation    -   Euler angle for wing rotation (psi)
+    %   Stroke      -   Euler angle for wing stroke (phi)
+    %   Deviation   -   Euler angle for wing deviation (beta)
+    %   rad_or_deg  -   Input angle units (0 for degrees, 1 for radians)
+    %   dt          -   Time step between data points
+    %
+    % Outputs:
+    %   Kinematics - Struct containing position, velocity, acceleration,
+    %                and angular dynamics in the body and wing frames.
+
+    %% 1. Angular Position (Convert angles to radians if needed)
+    if rad_or_deg == 0 % 0 = degrees, 1 = radians
         Kinematics.psi = deg2rad(Rotation);
         Kinematics.phi = deg2rad(Stroke);
         Kinematics.beta = deg2rad(Deviation);
@@ -10,167 +24,106 @@ function Kinematics = Kin(Rotation, Stroke, Deviation, rad_or_deg, dt)
         Kinematics.phi = Stroke;
         Kinematics.beta = Deviation;
     end
-    
-    %% Angular Velocity
-    % Calculates the angular velocity using a data diffrential function.
-    Kinematics.phi_d = deriv(Kinematics.phi,dt);
-    Kinematics.psi_d = deriv(Kinematics.psi,dt);
-    Kinematics.beta_d = deriv(Kinematics.beta,dt);
-    
-    %% Angular Acceleration
-    % Calculates the angular acceleration using a data diffrential function.
-    Kinematics.phi_dd = deriv(Kinematics.phi_d,dt);
-    Kinematics.psi_dd = deriv(Kinematics.psi_d,dt);
-    Kinematics.beta_dd = deriv(Kinematics.beta_d,dt);
-    
-    %% Rotation Matricies in Stationary Frame
-    % Calculate the vectors from the origin of the body frame and the
-    % assoicated rotation matrix.
+
+    %% 2. Angular Velocity and Acceleration
+    % Calculate angular velocity (first derivative) and acceleration (second derivative)
+    Kinematics.phi_d = deriv(Kinematics.phi, dt);
+    Kinematics.psi_d = deriv(Kinematics.psi, dt);
+    Kinematics.beta_d = deriv(Kinematics.beta, dt);
+
+    Kinematics.phi_dd = deriv(Kinematics.phi_d, dt);
+    Kinematics.psi_dd = deriv(Kinematics.psi_d, dt);
+    Kinematics.beta_dd = deriv(Kinematics.beta_d, dt);
+
+    %% 3. Rotation Matrices in Body Frame
+    % Compute rotation matrices for each timestep
     [ex1, ey1, ez1, Kinematics] = Rotation_Matrix(Kinematics);
 
-    %% Find Angular Velocity of each Wing with respect to Stationary Frame
-    % This finds the magnitude of the angluar velocity with respect to the body frame
+    %% 4. Angular Velocity and Acceleration in Body and Wing Frames
+    % Compute angular velocity and acceleration
     [Kinematics] = Omega_and_Alpha(ex1, ey1, ez1, Kinematics);
-
-
 end
 
-%% Functions
-
-function dx = deriv(x,dt)
+%% Derivative Function
+function dx = deriv(x, dt)
+    % DERIV - Compute numerical derivative using central difference method.
     dx = zeros(size(x));
-    dx_temp = diff(x)*(1/dt);
-    
-    dx(1,:) = dx_temp(1,:);
-    dx(end,:) = dx_temp(end,:);
-    dx(2:end-1,:) = 0.5*(dx_temp(1:end-1,:)+2*dx_temp(2:end,:));
+    dx_temp = diff(x) / dt;
+    dx(1) = dx_temp(1); % Forward difference at the start
+    dx(end) = dx_temp(end); % Backward difference at the end
+    dx(2:end-1) = 0.5 * (dx_temp(1:end-1) + dx_temp(2:end)); % Central difference
 end
 
-function [ex1, ey1, ez1, kinematics] = Rotation_Matrix(kinematics)
-    %this function finds the vectors in hopes of increasing the speed of
-    %the code
-    
-    %% Euler Transfermation
-    [R_inv, Rz_inv, Ry_inv, Rx_inv] = EulerRotation();
-    
-    %Array size
-    N = length(kinematics.phi);
+%% Rotation Matrix Function
+function [ex1, ey1, ez1, Kinematics] = Rotation_Matrix(Kinematics)
+    % ROTATION_MATRIX - Compute rotation matrices for each timestep.
 
-    % define the initial vectors and transformation
-    ex1=zeros(3,3,N);
-    ey1=zeros(3,3,N);
-    ez1=zeros(3,3,N);
-    
-    % calculate it for each instance
-    for i=1:N
-    
-        beta_sym = kinematics.beta(i);
-        psi_sym = kinematics.psi(i);
-        phi_sym = kinematics.phi(i);
-    
-        ex1(:,:,i)=vpa(subs(Rz_inv));
-        ey1(:,:,i)=vpa(subs(Rz_inv*Ry_inv));
-        ez1(:,:,i)=vpa(subs(Rz_inv*Ry_inv*Rx_inv));
-    
-        kinematics.R_inv2(:,:,i)=vpa(subs(R_inv));
-    
+    % Extract Euler angles
+    phi = Kinematics.phi;
+    beta = Kinematics.beta;
+    psi = Kinematics.psi;
+
+    % Number of timesteps
+    N = length(phi);
+
+    % Preallocate rotation matrix components
+    ex1 = zeros(3, 3, N);
+    ey1 = zeros(3, 3, N);
+    ez1 = zeros(3, 3, N);
+
+    % Compute rotation matrices for each timestep
+    for i = 1:N
+        % Rotation matrices for current timestep
+        Rz = [cos(phi(i)), -sin(phi(i)), 0; sin(phi(i)), cos(phi(i)), 0; 0, 0, 1];
+        Ry = [cos(beta(i)), 0, sin(beta(i)); 0, 1, 0; -sin(beta(i)), 0, cos(beta(i))];
+        Rx = [1, 0, 0; 0, cos(psi(i)), -sin(psi(i)); 0, sin(psi(i)), cos(psi(i))];
+
+        % Store inverses (transposes) for angular velocity computations
+        ex1(:, :, i) = Rx';
+        ey1(:, :, i) = (Ry * Rx)';
+        ez1(:, :, i) = (Rz * Ry * Rx)';
+        Kinematics.R_inv2(:, :, i) = (Rx * Ry * Rz)'; % Full rotation matrix
     end
 end
 
-function [R_inv, Rz_inv, Ry_inv, Rx_inv] = EulerRotation()
-    %this function finds the rotation matrix from the fly stationary wing axis
-    %to the moving wing axis.
-    
-    %R is the rotation from the stationary to the moving. Therefore finding its
-    %inverse is required
-    
-    % important note: as the wing is always moving, we cannot have one rotation
-    % matrix. To avoid having many matricies, i used a symbolic representation
-    % for this rotation. R_ivn; the output is a symbolic matrix which is
-    % evaluated for every datapoint of the euler angles when needed. however,
-    % it is not saved
-    
-    syms beta_sym phi_sym psi_sym
-    
-    Rx = [1 0 0;
-        0 cos(psi_sym) -sin(psi_sym);
-        0 sin(psi_sym) cos(psi_sym)];
-    
-    Ry = [cos(beta_sym) 0 sin(beta_sym);
-        0 1 0;
-        -sin(beta_sym) 0 cos(beta_sym)];
-    
-    Rz = [cos(phi_sym) -sin(phi_sym) 0;
-        sin(phi_sym) cos(phi_sym) 0;
-        0 0 1];
-    
-    Rx_inv = transpose(Rx);
-    Ry_inv = transpose(Ry);
-    Rz_inv = transpose(Rz);
-    
-    
-    R=Rx*Ry*Rz; % complete rotation from the stationary wing base frame to the moving wing frame
-    
-    R_inv=inv(R);
-end
-
+%% Angular Dynamics Function
 function [Kinematics] = Omega_and_Alpha(ex1, ey1, ez1, Kinematics)
-    % This finds the magnitude of the angluar velocity with respect to the body frame
+    % OMEGA_AND_ALPHA - Compute angular velocity and acceleration in the body frame.
 
-    % coordinate system (body)
-    % x-axis is to the side (right positive)
-    % y-axis is to forward
-    % z-axis is up  
+    % Unit vectors for the body frame
+    ex = [1; 0; 0]; % Unit vector along x-axis
+    ey = [0; 1; 0]; % Unit vector along y-axis
+    ez = [0; 0; 1]; % Unit vector along z-axis
 
-    % Unit Vectors in body coordinate system
-    ex=[1;0;0];
-    ey=[0;1;0];
-    ez=[0;0;1];
-
-    %% Angular velocity in vector form  
-    disp('Calculating the angular velocity in vector form')
-
-    % Array size
+    % Number of timesteps
     N = length(Kinematics.phi_d);
 
-    Kinematics.omega = zeros(3,N);
-    
-    for i=1:N
-        Kinematics.omega(1:3,i) = ez1(3,3,i)*Kinematics.phi_d(i)*ez + ey1(3,3,i)*Kinematics.beta_d(i)*ey + ex1(3,3,i)*Kinematics.psi_d(i)*ex;
-    end
-   
-    disp('Done with vector ang velolcity')
-    
-    %% Magnitude of ang vel in deg/s
-    disp('Calculating magnitude of angular velocity')
+    % Preallocate angular velocity and acceleration
+    Kinematics.omega = zeros(3, N);
+    Kinematics.alpha = zeros(3, N);
 
-    omega_mag = vecnorm(Kinematics.omega);
-
-    [b, a] = butter(2, 0.2, 'low');
-
-    Kinematics.omega_mag = filtfilt(b, a, omega_mag);
-    
-    disp('Finished calulating ang vel magnitude')
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %% Angular acceleration in vector form
-    disp('Calculating angular acceleration in vector form')
-
-    Kinematics.alpha = zeros(3,N);
-
-    for i=1:N
-        Kinematics.alpha(1:3,i) = ez1(3,3,i)*Kinematics.phi_dd(i)*ez + ey1(3,3,i)*Kinematics.beta_dd(i)*ey + ex1(3,3,i)*Kinematics.psi_dd(i)*ex;
+    % Compute angular velocity and acceleration in the body frame
+    for i = 1:N
+        % Angular velocity components in the body frame
+        Kinematics.omega(:, i) = ...
+            Kinematics.phi_d(i) * ez + ... % Component due to phi_dot
+            Kinematics.beta_d(i) * ey + ... % Component due to beta_dot
+            Kinematics.psi_d(i) * ex; % Component due to psi_dot
+        
+        % Angular acceleration components in the body frame
+        Kinematics.alpha(:, i) = ...
+            Kinematics.phi_dd(i) * ez + ... % Component due to phi_ddot
+            Kinematics.beta_dd(i) * ey + ... % Component due to beta_ddot
+            Kinematics.psi_dd(i) * ex; % Component due to psi_ddot
     end
 
-    disp('Done with angular acceleration')
-
-    %% Magnitude of ang accel in deg/s 
-    disp('Calculating magnitude of angular acceleration')
-
-    alpha_mag = vecnorm(Kinematics.alpha);
-
-    Kinematics.alpha_mag= filtfilt(b, a, alpha_mag);
-      
-    disp('Finished calulating ang accel magnitude')
-
+    % Apply low-pass filter for smoother results
+    [b, a] = butter(2, 0.2, 'low'); % 2nd-order Butterworth filter
+    for j = 1:3
+    Kinematics.omega(j,:) = filtfilt(b, a, Kinematics.omega(j,:));
+    Kinematics.alpha(j,:) = filtfilt(b, a, Kinematics.alpha(j,:));
+    end
+    Kinematics.omega_mag = filtfilt(b, a, vecnorm(Kinematics.omega));
+    Kinematics.alpha_mag = filtfilt(b, a, vecnorm(Kinematics.alpha));
 end
+

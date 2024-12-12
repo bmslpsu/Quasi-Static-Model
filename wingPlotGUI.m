@@ -61,7 +61,7 @@ function [Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Joint] = wingPlotGUI(Wing_Sh
     ylabel(ax, 'Y');
     zlabel(ax, 'Z');
     axis(ax, 'equal');
-    axis(ax,[-2,4,-4,4])
+    axis(ax,[-4,4,-2,4])
     title(ax, 'Wing Plot');
 
     %grid(ax, 'on'); 
@@ -150,15 +150,15 @@ function Wing_Chossen(lhWingLength, lhChordLength, lhSpanwiseCut, lhChordwiseCut
     Wing_Shape_lh.Wing_x = Wing_left_x_data;
     Wing_Shape_lh.Wing_y = Wing_left_y_data;
     Wing_Shape_lh.Wing_z = Wing_left_z_data;
-    Wing_Shape_lh.Wing_root_index = find(Wing_left_y_data == min(Wing_left_y_data));
+    Wing_Shape_lh.Wing_root_index = find(Wing_left_x_data == max(Wing_left_x_data));
     Wing_Shape_lh.Wing_root = [Wing_left_x_data(Wing_Shape_lh.Wing_root_index), Wing_left_y_data(Wing_Shape_lh.Wing_root_index)];
     
-    Max_1 = find(Wing_left_y_data == max(Wing_left_y_data),1,"first");
-    Max_2 = find(Wing_left_y_data == max(Wing_left_y_data),1,"last") ; 
+    Max_1 = find(Wing_left_x_data == min(Wing_left_x_data),1,"first");
+    Max_2 = find(Wing_left_x_data == min(Wing_left_x_data),1,"last") ; 
     if Max_1 ~= Max_2
-        Max_12 = round(Max_1 + (Max_2-Max_1)/2);
-    else
         Max_12 = Max_1;
+    else
+        Max_12 = round(Max_1 + (Max_2-Max_1)/2);
     end
 
     Wing_Shape_lh.Wing_tip_index = Max_12;
@@ -168,15 +168,15 @@ function Wing_Chossen(lhWingLength, lhChordLength, lhSpanwiseCut, lhChordwiseCut
     Wing_Shape_rh.Wing_x = Wing_right_x_data;
     Wing_Shape_rh.Wing_y = Wing_right_y_data;
     Wing_Shape_rh.Wing_z = Wing_right_z_data;
-    Wing_Shape_rh.Wing_root_index = find(Wing_right_y_data == max(Wing_right_y_data));
+    Wing_Shape_rh.Wing_root_index = find(Wing_right_x_data == min(Wing_right_x_data));
     Wing_Shape_rh.Wing_root = [Wing_right_x_data(Wing_Shape_rh.Wing_root_index), Wing_right_y_data(Wing_Shape_rh.Wing_root_index)];
 
-    Min_1 = find(Wing_right_y_data == min(Wing_right_y_data),1,"first");
-    Min_2 = find(Wing_right_y_data == min(Wing_right_y_data),1,"last");   
+    Min_1 = find(Wing_right_x_data == max(Wing_right_x_data),1,"first");
+    Min_2 = find(Wing_right_x_data == max(Wing_right_x_data),1,"last");   
     if Min_1 ~= Min_2
-        Min_12 = round(Min_1 + (Min_2-Min_1)/2);
-    else
         Min_12 = Min_1;
+    else
+        Min_12 = round(Min_1 + (Min_2-Min_1)/2);
     end
     
     Wing_Shape_rh.Wing_tip_index = Min_12;

@@ -1,44 +1,54 @@
 function Fly_2 = FindTorqueVectors(Fly, R_inv2, Fly_2)
 
-    %% Find the minimum length of force arrays to avoid indexing errors
-    N=length(Fly.Lift_torque(1,:));
+    %% Preamble
+    % Rotates torque vectors into the proper frame and applies filtering to smooth the data.
 
-    %% Array Initialization
-    Lift_torque_vec    = zeros(3, N);
-    Drag_torque_vec    = zeros(3, N);
-    AM_torque_vec    = zeros(3, N);
-    Rot_torque_vec    = zeros(3, N);
-    Inertia_torque_vec    = zeros(3, N);
+    %% Initialize Parameters
+    N = size(Fly.Lift_torque, 2); % Number of time steps
 
-    %% Calculate the force vectors by rotating them into the proper frame
-    for i = 1:N
-        Rot_mat = R_inv2(:, :, i);
-        Lift_torque_vec(:, i)  = Rot_mat * (Fly.Lift_torque(:,i));
-        Drag_torque_vec(:, i)  = Rot_mat * (Fly.Drag_torque(:,i));
-        AM_torque_vec(:, i)  = Rot_mat * (Fly.AM_torque(:,i));
-        Rot_torque_vec(:, i)  = Rot_mat * (Fly.Rot_torque(:,i));
-        Inertia_torque_vec(:, i)  = Rot_mat * (Fly.Inertia_torque(:,i));
+    % Preallocate torque vectors for efficiency
+    torque_types = {'Lift_torque', 'Drag_torque', 'AM_torque', 'Rot_torque', 'Inertia_torque'};
+    torque_vectors = struct();
+
+    for torque_type = torque_types
+        torque_vectors.(torque_type{1}) = zeros(3, N);
     end
 
+    %% Rotate Torques into the Proper Frame
+    for i = 1:N
+        Rot_mat = R_inv2(:, :, i); % Rotation matrix for timestep i
 
-    %% Filter data
-    % Butter filter to compare to actual collected data
+        % Apply rotation for each torque type
+        torque_vectors.Lift_torque(:, i) = Rot_mat * Fly.Lift_torque(:, i);
+        torque_vectors.Drag_torque(:, i) = Rot_mat * Fly.Drag_torque(:, i);
+        torque_vectors.AM_torque(:, i) = Rot_mat * Fly.AM_torque(:, i);
+        torque_vectors.Rot_torque(:, i) = Rot_mat * Fly.Rot_torque(:, i);
+        torque_vectors.Inertia_torque(:, i) = Rot_mat * Fly.Inertia_torque(:, i);
+    end
+
+    %% Filter Torque Data
+    % Apply a low-pass Butterworth filter for smoothing
     [b, a] = butter(2, 0.25, 'low');
-    for j=1:3
-        Lift_torque_vec(j, :) = filtfilt(b, a, Lift_torque_vec(j, :));
-        Drag_torque_vec(j, :) = filtfilt(b, a, Drag_torque_vec(j, :));
-        AM_torque_vec(j, :) = filtfilt(b, a, AM_torque_vec(j, :));
-        Rot_torque_vec(j, :) = filtfilt(b, a, Rot_torque_vec(j, :));
-        Inertia_torque_vec(j, :) = filtfilt(b, a, Inertia_torque_vec(j, :));
+
+    % Filter each torque vector
+    for torque_type = torque_types
+        for j = 1:3
+            torque_vectors.(torque_type{1})(j, :) = filtfilt(b, a, torque_vectors.(torque_type{1})(j, :));
+        end
+    end
+
+    % Filter Fly_2.torque_forces_vec
+    for j = 1:3
         Fly_2.torque_forces_vec(j, :) = filtfilt(b, a, Fly_2.torque_forces_vec(j, :));
     end
 
-    %% Store the force vectors in the element structure
+    %% Store Rotated and Filtered Torques
+    Fly_2.torque_Lift_vec = torque_vectors.Lift_torque;
+    Fly_2.torque_Drag_vec = torque_vectors.Drag_torque;
+    Fly_2.torque_AM_vec = torque_vectors.AM_torque;
+    Fly_2.torque_Rot_vec = torque_vectors.Rot_torque;
+    Fly_2.torque_Inertia_vec = torque_vectors.Inertia_torque;
 
-    Fly_2.torque_Lift_vec  = Lift_torque_vec;
-    Fly_2.torque_Drag_vec  = Drag_torque_vec;
-    Fly_2.torque_AM_vec  = AM_torque_vec;
-    Fly_2.torque_Rot_vec  = Rot_torque_vec;
-    Fly_2.torque_Inertia_vec  = Inertia_torque_vec;
-    Fly_2.torque_total_vec = Lift_torque_vec + Drag_torque_vec + AM_torque_vec + Rot_torque_vec + Inertia_torque_vec + Fly_2.torque_forces_vec;
+    % Calculate total torque vector
+    Fly_2.torque_total_vec = Fly_2.torque_Lift_vec + Fly_2.torque_Drag_vec + Fly_2.torque_AM_vec + Fly_2.torque_Rot_vec + Fly_2.torque_Inertia_vec + Fly_2.torque_forces_vec;
 end

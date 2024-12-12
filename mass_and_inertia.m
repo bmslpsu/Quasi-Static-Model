@@ -3,6 +3,8 @@ function [Fly]  = mass_and_inertia(Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Fly
 %% Get standard data
 [metrics, fly_body, fly_wing] = get_metrics();
 
+% Wing properties
+rho = fly_wing.density;      % Density (kg/m^3)
 
 %% Head
 %Calculate Mass, CG, Intertia, and surface area
@@ -129,7 +131,7 @@ Fly.body.inertia = head.inertia  + thorax.inertia  + abdomen.inertia;
 
 % Calculate area using the shoelace formula
 n = length(Wing_Shape_lh.Wing_x);
-x = Wing_Shape_lh.Wing_x;
+x = -Wing_Shape_lh.Wing_x;
 y = Wing_Shape_lh.Wing_y;
 z = Wing_Shape_lh.Wing_z;
 z_thickness = fly_wing.thickness; 
@@ -141,8 +143,6 @@ Area = polyarea(x, y);
 % Calculate volume assuming uniform thickness
 volume = Area * z_thickness;
 
-mass = volume*fly_wing.density;
-
 % Calculate center of gravity
 % Use the same formula for centroid as in 2D case
 sum_x = sum(x(1:end-1) .* y(2:end) - y(1:end-1) .* x(2:end));
@@ -150,19 +150,51 @@ sum_y = sum((x(1:end-1) + x(2:end)) .* (x(1:end-1) .* y(2:end) - x(2:end) .* y(1
 X_CG = sum_x / (6 * Area);
 Y_CG = sum_y / (6 * Area);
 Z_CG = mean(z);   % need to add portion where z axis is respected
-CG = [X_CG, Y_CG, Z_CG];
+CG = [X_CG, Y_CG, Z_CG]; 
 
-% Calculate inertia tensor
-Ixx = (1/12) * fly_wing.density * z_thickness * sum(y.^2 + z.^2);
-Iyy = (1/12) * fly_wing.density * z_thickness * sum(x.^2 + z.^2);
-Izz = (1/12) * fly_wing.density * z_thickness * sum(x.^2 + y.^2);
-Ixy = -(1/24) * fly_wing.density * z_thickness * sum(x .* y);
-Ixz = -(1/24) * fly_wing.density * z_thickness * sum(x .* z);
-Iyz = -(1/24) * fly_wing.density * z_thickness * sum(y .* z);
-inertia = [...
-    Ixx, Ixy, Ixz;...
-    Ixy, Iyy, Iyz;...
-    Ixz, Iyz, Izz];
+
+
+% Step 1: Calculate the CoM
+x_com = sum(x) / length(x); % x-coordinate of the CoM
+y_com = sum(y) / length(y); % y-coordinate of the CoM
+z_com = sum(z) / length(z); % z-coordinate of the CoM
+
+% Shift coordinates to the CoM frame
+x_shifted = x - x_com;
+y_shifted = y - y_com;
+z_shifted = 0;
+
+% Step 2: Calculate moments of inertia in the CoM frame
+Ixx_com = rho * z_thickness * sum(y_shifted.^2 + z_shifted.^2); % Moment about x-axis
+Iyy_com = rho * z_thickness * sum(x_shifted.^2 + z_shifted.^2); % Moment about y-axis
+Izz_com = rho * z_thickness * sum(x_shifted.^2 + y_shifted.^2); % Moment about z-axis
+
+% Step 3: Calculate products of inertia in the CoM frame
+Ixy_com = -rho * z_thickness * sum(x_shifted .* y_shifted); % Product of inertia xy
+Ixz_com = -rho * z_thickness * sum(x_shifted .* z_shifted); % Product of inertia xz
+Iyz_com = -rho * z_thickness * sum(y_shifted .* z_shifted); % Product of inertia yz
+
+% Step 4: Parallel axis theorem (if needed)
+% Mass of the plate
+mass = volume*fly_wing.density;
+
+% Distances from the original frame to the CoM frame
+dx = min(x_shifted);
+dxi = find(x_shifted==min(x_shifted));
+dy = y(dxi(1));
+dz = 0;
+
+% Apply the parallel axis theorem
+Ixx = Ixx_com + mass * (dy^2 + dz^2);
+Iyy = Iyy_com + mass * (dx^2 + dz^2);
+Izz = Izz_com + mass * (dx^2 + dy^2);
+
+% Products of inertia (unchanged by parallel axis theorem for CoM offset)
+Ixy = Ixy_com - mass * dx * dy;
+Ixz = Ixz_com - mass * dx * dz;
+Iyz = Iyz_com - mass * dy * dz;
+
+inertia = [Ixx, Ixy, Ixz; Ixy, Iyy, Iyz; Ixz, Iyz, Izz];
 
 %Place in wing_lh structure
 Fly.wing_LH.area = Area;
@@ -172,7 +204,7 @@ Fly.wing_LH.mass = mass;
 Fly.wing_LH.inertia = inertia;
 
 %% Wing_RH
-%Calculate Mass, CG, Intertia, and surface area??
+%Calculate Mass, CG, Intertia, and surface area
 
 % Calculate area using the shoelace formula
 n = length(Wing_Shape_rh.Wing_x);
@@ -187,24 +219,57 @@ Area = polyarea(x, y);
 % Calculate volume assuming uniform thickness
 volume = Area * z_thickness;
 
-mass = volume*fly_wing.density;
-
 % Calculate center of gravity
 % Use the same formula for centroid as in 2D case
-sum_x = -sum(x(1:end-1) .* y(2:end) - y(1:end-1) .* x(2:end));
+sum_x = sum(x(1:end-1) .* y(2:end) - y(1:end-1) .* x(2:end));
 sum_y = sum((x(1:end-1) + x(2:end)) .* (x(1:end-1) .* y(2:end) - x(2:end) .* y(1:end-1)));
 X_CG = sum_x / (6 * Area);
 Y_CG = sum_y / (6 * Area);
 Z_CG = mean(z);   % need to add portion where z axis is respected
-CG = [X_CG, Y_CG, Z_CG];
+CG = [X_CG, Y_CG, Z_CG]; 
 
-% Calculate inertia tensor
-Ixx = (1/12) * fly_wing.density * z_thickness * sum(y.^2 + z.^2);
-Iyy = (1/12) * fly_wing.density * z_thickness * sum(x.^2 + z.^2);
-Izz = (1/12) * fly_wing.density * z_thickness * sum(x.^2 + y.^2);
-Ixy = -(1/24) * fly_wing.density * z_thickness * sum(x .* abs(y));
-Ixz = -(1/24) * fly_wing.density * z_thickness * sum(x .* z);
-Iyz = -(1/24) * fly_wing.density * z_thickness * sum(abs(y) .* z);
+
+
+% Step 1: Calculate the CoM
+x_com = sum(x) / length(x); % x-coordinate of the CoM
+y_com = sum(y) / length(y); % y-coordinate of the CoM
+z_com = sum(z) / length(z); % z-coordinate of the CoM
+
+% Shift coordinates to the CoM frame
+x_shifted = x - x_com;
+y_shifted = y - y_com;
+z_shifted = 0;
+
+% Step 2: Calculate moments of inertia in the CoM frame
+Ixx_com = rho * z_thickness * sum(y_shifted.^2 + z_shifted.^2); % Moment about x-axis
+Iyy_com = rho * z_thickness * sum(x_shifted.^2 + z_shifted.^2); % Moment about y-axis
+Izz_com = rho * z_thickness * sum(x_shifted.^2 + y_shifted.^2); % Moment about z-axis
+
+% Step 3: Calculate products of inertia in the CoM frame
+Ixy_com = -rho * z_thickness * sum(x_shifted .* y_shifted); % Product of inertia xy
+Ixz_com = -rho * z_thickness * sum(x_shifted .* z_shifted); % Product of inertia xz
+Iyz_com = -rho * z_thickness * sum(y_shifted .* z_shifted); % Product of inertia yz
+
+% Step 4: Parallel axis theorem (if needed)
+% Mass of the plate
+mass = volume*fly_wing.density;
+
+% Distances from the original frame to the CoM frame
+dx = min(x_shifted);
+dxi = find(x_shifted==min(x_shifted));
+dy = y(dxi(1));
+dz = 0;
+
+% Apply the parallel axis theorem
+Ixx = Ixx_com + mass * (dy^2 + dz^2);
+Iyy = Iyy_com + mass * (dx^2 + dz^2);
+Izz = Izz_com + mass * (dx^2 + dy^2);
+
+% Products of inertia (unchanged by parallel axis theorem for CoM offset)
+Ixy = Ixy_com - mass * dx * dy;
+Ixz = Ixz_com - mass * dx * dz;
+Iyz = Iyz_com - mass * dy * dz;
+
 inertia = [Ixx, Ixy, Ixz; Ixy, Iyy, Iyz; Ixz, Iyz, Izz];
 
 %Place in wing_rh structure
@@ -214,103 +279,6 @@ Fly.wing_RH.CG = CG;
 Fly.wing_RH.mass = mass;
 Fly.wing_RH.inertia = inertia;
 
-
-%% Define Joint Locations
-% Head
-% Abdomen
-% Joint LH
-% Joint RH
-
-% % %% Mass Matrix
-% % 
-% % % Initialize matrices
-% % Mb = zeros(6, 6);
-% % MwL = zeros(6, 6);
-% % MwR = zeros(6, 6);
-% % 
-% % % Compute Mb
-% % Mb(1, 1) = body.mass;
-% % Mb(1, 5) = body.mass * body.CG(3);
-% % Mb(1, 6) = body.mass * body.CG(2) * -1;
-% % Mb(2, 2) = body.mass;
-% % Mb(2, 4) = body.mass * body.CG(3) * -1;
-% % Mb(2, 6) = body.mass * body.CG(1);
-% % Mb(3, 3) = body.mass;
-% % Mb(3, 4) = body.mass * body.CG(2);
-% % Mb(3, 5) = body.mass * body.CG(1) * -1;
-% % Mb(4, 2) = body.mass * body.CG(3) * -1;
-% % Mb(4, 3) = body.mass * body.CG(2);
-% % Mb(4, 4) = body.inertia(1, 1);
-% % Mb(4, 5) = body.inertia(1, 2);
-% % Mb(4, 6) = body.inertia(1, 3);
-% % Mb(5, 1) = body.mass * body.CG(3);
-% % Mb(5, 3) = body.mass * body.CG(1) * -1;
-% % Mb(5, 4) = body.inertia(2, 1);
-% % Mb(5, 5) = body.inertia(2, 2);
-% % Mb(5, 6) = body.inertia(2, 3);
-% % Mb(6, 1) = body.mass * body.CG(2) * -1;
-% % Mb(6, 2) = body.mass * body.CG(1);
-% % Mb(6, 4) = body.inertia(3, 1);
-% % Mb(6, 5) = body.inertia(3, 2);
-% % Mb(6, 6) = body.inertia(3, 3);
-% % 
-% % body.mb = Mb;
-% % 
-% % % Compute MwL 
-% % MwL(1, 1) = wing_lh.mass;
-% % MwL(1, 5) = wing_lh.CG(3) * wing_lh.mass;
-% % MwL(1, 6) = wing_lh.CG(2) * wing_lh.mass * -1;
-% % MwL(2, 2) = wing_lh.mass;
-% % MwL(2, 4) = wing_lh.CG(3) * wing_lh.mass * -1;
-% % MwL(2, 6) = wing_lh.CG(1) * wing_lh.mass;
-% % MwL(3, 3) = wing_lh.mass;
-% % MwL(3, 4) = wing_lh.CG(2) * wing_lh.mass;
-% % MwL(3, 5) = wing_lh.CG(1) * wing_lh.mass * -1;
-% % MwL(4, 2) = wing_lh.CG(3) * wing_lh.mass * -1;
-% % MwL(4, 3) = wing_lh.CG(2) * wing_lh.mass;
-% % MwL(4, 4) = wing_lh.inertia(1, 1);
-% % MwL(4, 5) = wing_lh.inertia(1, 2);
-% % MwL(4, 6) = wing_lh.inertia(1, 3);
-% % MwL(5, 1) = wing_lh.CG(3) * wing_lh.mass;
-% % MwL(5, 3) = wing_lh.CG(1) * wing_lh.mass * -1;
-% % MwL(5, 4) = wing_lh.inertia(2, 1);
-% % MwL(5, 5) = wing_lh.inertia(2, 2);
-% % MwL(5, 6) = wing_lh.inertia(2, 3);
-% % MwL(6, 1) = wing_lh.CG(2) * wing_lh.mass * -1;
-% % MwL(6, 2) = wing_lh.CG(1) * wing_lh.mass;
-% % MwL(6, 4) = wing_lh.inertia(3, 1);
-% % MwL(6, 5) = wing_lh.inertia(3, 2);
-% % MwL(6, 6) = wing_lh.inertia(3, 3);
-% % 
-% % wing_lh.MwL = MwL;
-% % 
-% % % Compute MwR
-% % MwR(1, 1) = wing_rh.mass;
-% % MwR(1, 5) = wing_rh.CG(3) * wing_rh.mass;
-% % MwR(1, 6) = wing_rh.CG(2) * wing_rh.mass * -1;
-% % MwR(2, 2) = wing_rh.mass;
-% % MwR(2, 4) = wing_rh.CG(3) * wing_rh.mass * -1;
-% % MwR(2, 6) = wing_rh.CG(1) * wing_rh.mass;
-% % MwR(3, 3) = wing_rh.mass;
-% % MwR(3, 4) = wing_rh.CG(2) * wing_rh.mass;
-% % MwR(3, 5) = wing_rh.CG(1) * wing_rh.mass * -1;
-% % MwR(4, 2) = wing_rh.CG(3) * wing_rh.mass * -1;
-% % MwR(4, 3) = wing_rh.CG(2) * wing_rh.mass;
-% % MwR(4, 4) = wing_rh.inertia(1, 1);
-% % MwR(4, 5) = wing_rh.inertia(1, 2);
-% % MwR(4, 6) = wing_rh.inertia(1, 3);
-% % MwR(5, 1) = wing_rh.CG(3) * wing_rh.mass;
-% % MwR(5, 3) = wing_rh.CG(1) * wing_rh.mass * -1;
-% % MwR(5, 4) = wing_rh.inertia(2, 1);
-% % MwR(5, 5) = wing_rh.inertia(2, 2);
-% % MwR(5, 6) = wing_rh.inertia(2, 3);
-% % MwR(6, 1) = wing_rh.CG(2) * wing_rh.mass * -1;
-% % MwR(6, 2) = wing_rh.CG(1) * wing_rh.mass;
-% % MwR(6, 4) = wing_rh.inertia(3, 1);
-% % MwR(6, 5) = wing_rh.inertia(3, 2);
-% % MwR(6, 6) = wing_rh.inertia(3, 3);
-% % 
-% % wing_rh.MwR = MwR;
 
 %% Fly Total
 Fly.total.mass = Fly.body.mass + Fly.wing_LH.mass + Fly.wing_RH.mass;
