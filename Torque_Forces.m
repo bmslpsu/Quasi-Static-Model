@@ -1,11 +1,10 @@
-function [forces_torque] = Torque_Forces(Fly, element, wing, R_inv2, force, side, fly_num)
+function [forces_torque] = Torque_Forces(Fly, element, R_inv2, force)
     %% Preamble
     disp('Force Torque Calculation - Start');
 
     %% Initialization
     N = length(Fly.force_total.Force_Body_LH.Lift_torque);
     Force_torque = zeros(3, N);
-    total_cop = zeros(3, N);
 
     %% Compute Total Center of Pressure (COP)
     [total_cop, bad_data] = computeCOP(N, element);

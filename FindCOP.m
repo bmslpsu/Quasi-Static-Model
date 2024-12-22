@@ -1,4 +1,4 @@
-function element = FindCOP(psi, n, c, R_inv2, wing_length)
+function element = FindCOP(psi, n, c, R_inv2, wing_length, wing_shape)
     %% Starting message
     disp('Location of COP Calculation - Start');
 
@@ -21,11 +21,11 @@ function element = FindCOP(psi, n, c, R_inv2, wing_length)
 
     %% Main Computation Loop
     for j = 1:n
+        
         % Compute vectors for all timesteps in one go (vectorized)
         r_cp_vec(1, :) = delz / 2 + delz * (j - 1);                 % x-component of the COP
         r_cp_vec(2, :) = 0;                                         % y-component is zero
-        r_cp_vec(3, :) = 0; %c(j) * (0.82 * abs(psi) / pi + 0.05);      % z-component (along the chord) % Based on paper: 2008 Dickson Integrative...
-
+        r_cp_vec(3, :) = -(wing_shape.Wing_y(wing_shape.Wing_root_index - 1 + j) - wing_shape.Wing_root(2)) + c(j) * (0.82 * abs(psi) / pi + 0.05);      % z-component (along the chord) % Based on paper: 2008 Dickson Integrative...
 
         % Rotate vectors using R_inv2 for all timesteps
         for i = 1:N

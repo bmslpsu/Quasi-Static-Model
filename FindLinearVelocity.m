@@ -58,37 +58,4 @@ end
 %% Starting message
 disp('Linear Acceleration Calculation - End')
 
-%% Plots
-% figure
-% hold on
-% plot(v_linear')
-% title("v linear")
-%  legend(["X" "Y" "Z"])
-% hold off
-% 
-% figure
-% hold on
-% plot(v_linear_Norm)
-% title("v linear norm")
-% hold off
-% 
-% figure
-% hold on
-% plot(v_linear_direction')
-% title("v linear direction")
-%  legend(["X" "Z" "Y"])
-% hold off
-
-% figure
-% hold on
-% plot(a_linear')
-% title("a linear")
-% hold off
-% 
-% figure
-% hold on
-% plot(a_linear_Norm)
-% title("a linear norm")
-% hold off
-
 end

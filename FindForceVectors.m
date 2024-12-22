@@ -1,4 +1,4 @@
-function Fly = FindForceVectors(Fly, R_inv2)
+function Fly = FindForceVectors(Fly, R_inv2, ang_wing_plane)
 
     % Find the minimum length of force arrays to avoid indexing errors
     N=length(Fly.Lift_force(1,:));
@@ -12,11 +12,12 @@ function Fly = FindForceVectors(Fly, R_inv2)
     % Calculate the force vectors by rotating them into the proper frame
     for i = 1:N
         Rot_mat = R_inv2(:, :, i);
+        Rot_wing_plane = rotx(deg2rad(ang_wing_plane));
         %Rot_mat = 1;
-        Lift_vec(:, i)  = Rot_mat * (Fly.Lift_force(:,i));
-        Drag_vec(:, i)  = Rot_mat * (Fly.Drag_force(:,i));
-        AM_vec(:, i)    = Rot_mat * (Fly.AM_force(:,i));
-        Rot_vec(:, i)   = Rot_mat * (Fly.Rot_force(:,i));
+        Lift_vec(:, i)  = Rot_wing_plane * Rot_mat * (Fly.Lift_force(:,i));
+        Drag_vec(:, i)  = Rot_wing_plane * Rot_mat * (Fly.Drag_force(:,i));
+        AM_vec(:, i)    = Rot_wing_plane * Rot_mat * (Fly.AM_force(:,i));
+        Rot_vec(:, i)   = Rot_wing_plane * Rot_mat * (Fly.Rot_force(:,i));
     end
 
 

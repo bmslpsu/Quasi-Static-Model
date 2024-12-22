@@ -13,6 +13,11 @@ function Kinematics = Kin(Rotation, Stroke, Deviation, rad_or_deg, dt)
     % Outputs:
     %   Kinematics - Struct containing position, velocity, acceleration,
     %                and angular dynamics in the body and wing frames.
+    %
+    % Frame:
+    %   x-axis is along the length of the wing (Root to Tip)
+    %   y-axis is perpendicular to the surface of the wing
+    %   z-axis is along the chord of the wing starting and is parallel to the abdomen of the fly
 
     %% 1. Angular Position (Convert angles to radians if needed)
     if rad_or_deg == 0 % 0 = degrees, 1 = radians

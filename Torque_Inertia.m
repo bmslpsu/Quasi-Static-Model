@@ -21,15 +21,14 @@ function [element, Inertial_torque] = Torque_Inertia(element, Kinematics, inerti
 
     %% Compute Inertial Torques
     for j = 1:N
-
-    inertia_Rotated = R_inv(:, :, j) * inertia * R_inv(:, :, j)';
+    inertia_wing_frame = inertia;
+    inertia_Rotated =  R_inv(:, :, j)' * inertia_wing_frame;
 
     torque_angular_accel(:, j) = inertia_Rotated * Kinematics.alpha(:, j);                                % Torque due to angular acceleration
     torque_gyroscopic(:, j) = cross(Kinematics.omega(:, j), inertia_Rotated * Kinematics.omega(:, j));    % Gyroscopic (Coriolis) torque
     
     Inertial_torque(:, j) = torque_angular_accel(:, j) + torque_gyroscopic(:, j);                         % Total inertial torque
-    end
-    
+    end   
 
     %% Ending Message
     disp('Inertial Torque Calculation - End');
