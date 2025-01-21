@@ -1,4 +1,4 @@
-function [Fly] = Analysis_Fly(LH_Chord_Cut, LH_Span_Cut, RH_Chord_Cut, RH_Span_Cut, LH_Stroke_Amplitude, RH_Stroke_Amplitude, fly_num, FilteredAngleL, FilteredAngleR, period) 
+function [Fly] = Analysis_Fly(LH_Chord_Cut, LH_Span_Cut, RH_Chord_Cut, RH_Span_Cut, LH_Stroke_Amplitude, RH_Stroke_Amplitude, fly_num, FilteredAngleL, FilteredAngleR, period, ang_wing_plane) 
 %% Note on the Axese
 
 % For the wing
@@ -47,7 +47,7 @@ Fly.Kinematics_RH = Kinematics_RH;
 [Fly.wing_LH.wing_shape, Fly.wing_RH.wing_shape, Fly.body.body_shape, Fly.body.Joint] = wingPlotGUI(Wing_Shape_LH, Wing_Shape_RH, Body_Shape,true,LH_Span_Cut,LH_Chord_Cut,RH_Span_Cut,RH_Chord_Cut);
 
 % Body and Wing physical Analyis
-[Fly] = mass_and_inertia(Fly.wing_LH.wing_shape,Fly.wing_RH.wing_shape, Fly.body.body_shape, Fly);
+[Fly] = Phsycial_Characteristics(Fly.wing_LH.wing_shape,Fly.wing_RH.wing_shape, Fly.body.body_shape, Fly);
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find the Location of the Center of Pressure for each Wing Element
@@ -71,7 +71,6 @@ Wing_Element_RH = FindLinearVelocity(Wing_Element_RH, Kinematics_RH.omega, Kinem
 [Wing_Element_RH, Fly.force_components.rh.Inertia_torque] = Torque_Inertia(Wing_Element_RH,  Kinematics_RH, Fly.wing_RH.inertia, Kinematics_RH.R_inv2);
 
 %% Find Force Directions
-ang_wing_plane = 0;
 Fly.force_total.Force_Body_LH = FindForceVectors(Fly.force_components.lh, Kinematics_LH.R_inv2, ang_wing_plane);
 Fly.force_total.Force_Body_RH = FindForceVectors(Fly.force_components.rh, Kinematics_RH.R_inv2, ang_wing_plane);
 

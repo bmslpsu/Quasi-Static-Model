@@ -9,17 +9,17 @@ warning off
 current_time = datetime;
 
 %% Wing Damage Values
-Wing_damage_LH = [40 60 75 90 95 100];
-Wing_damage_RH = [100 100 100 100 100 100];
-Stroke_Amplitude_LH = [100 100 100 100 100 100];
-Stroke_Amplitude_RH = [100 100 100 100 100 100];
+% Wing_damage_LH = [40 60 75 90 95 100];
+% Wing_damage_RH = [100 100 100 100 100 100];
+% Stroke_Amplitude_LH = [100 100 100 100 100 100];
+% Stroke_Amplitude_RH = [100 100 100 100 100 100];
 
 
 %% Stroke Amplitude Values
-% Wing_damage_LH = [100 100 100 100 100 100];
-% Wing_damage_RH = [100 100 100 100 100 100];
-% Stroke_Amplitude_LH = [75 80 85 90 95 100];
-% Stroke_Amplitude_RH = [100 100 100 100 100 100];
+Wing_damage_LH = [100 100 100 100 100 100];
+Wing_damage_RH = [100 100 100 100 100 100];
+Stroke_Amplitude_LH = [75 80 85 90 95 100];
+Stroke_Amplitude_RH = [100 100 100 100 100 100];
 
 %% Program Runner
 
@@ -73,62 +73,70 @@ Torque_Stroke_Roll = [0, 0.055, .13, .2, .25];
 Torque_Stroke_Pitch = [0, -0.005, -0.01, -0.04, -0.055];
 
 Damage_chord_Position = [.98, .92, .8, .7, .52];
-Force_Damage_chord_x = [0, 0.01, -0.005, -0.015, -0.02];
-Force_Damage_chord_y = [0, 0.055, .13, .2, .25];
-Force_Damage_chord_z = [0, -0.005, -0.01, -0.04, -0.055];
+Force_Damage_chord_x = [0.15, 0.145, 0.14, 0.12, 0.1];
+Force_Damage_chord_y = [0.03, -.01, .02, .05, .07];
+Force_Damage_chord_z = [0.98, 0.92, 0.88, 0.82, 0.74];
 Torque_Damage_chord_Yaw = [0.015, 0.01, 0.009, -0.01, -0.015];
 Torque_Damage_chord_Roll = [.001, 0.04, .09, .15, .22];
 Torque_Damage_chord_Pitch = [.002, .001, .005, .009, .01];
 
 Damage_span_Position = [.8, .53, .34, .18, .1];
-% Force_Damage_span_x = [0, 0.01, -0.005, -0.015, -0.02];
-% Force_Damage_span_y = [0, 0.055, .13, .2, .25];
-% Force_Damage_span_z = [0, -0.005, -0.01, -0.04, -0.055];
-Torque_Damage_span_Yaw = [-0.01, -0.02, -.26, -0.4, -0.35];
+Force_Damage_span_x = [0.12, 0.07, 0.05, 0.04, 0.03];
+Force_Damage_span_y = [0.01, 0.03, .06, .07, .1];
+Force_Damage_span_z = [0.9, 0.77, 0.57, 0.49, 0.44];
+Torque_Damage_span_Yaw = [-0.01, -0.02, -.026, -0.04, -0.035];
 Torque_Damage_span_Roll = [.11, 0.25, .35, .41, .43];
-Torque_Damage_span_Pitch = [.02, .03, .05, .06, .55];
+Torque_Damage_span_Pitch = [.02, .03, .05, .06, .055];
 
 
 %% Force means
 
 for i=1:length(Fly_Master)
     S_2_Ratio(i) = Fly_Master(i).Fly.total.S_2_Ratio;
-    Force_X_mean(i) = (mean(Fly_Master(i).Fly.force_total.Force_Body_LH.force_total_vec(1,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_RH.force_total_vec(1,:)))/Fly_Master(i).Fly.total.weight;
+    Force_X_mean(i) = -(mean(Fly_Master(i).Fly.force_total.Force_Body_LH.force_total_vec(1,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_RH.force_total_vec(1,:)))/Fly_Master(i).Fly.total.weight;
     Force_Y_mean(i) = (mean(Fly_Master(i).Fly.force_total.Force_Body_LH.force_total_vec(3,:)) - mean(Fly_Master(i).Fly.force_total.Force_Body_RH.force_total_vec(3,:)))/Fly_Master(i).Fly.total.weight;
     Force_Z_mean(i) = (mean(Fly_Master(i).Fly.force_total.Force_Body_LH.force_total_vec(2,:)) + mean(Fly_Master(i).Fly.force_total.Force_Body_RH.force_total_vec(2,:)))/Fly_Master(i).Fly.total.weight;
 end
 
 %% S_2 versus force
-figure
-hold on
-plot(S_2_Ratio,Force_X_mean,'Color',[1, 0.5, 0])
-plot(S_2_Ratio,Force_Y_mean,'Color',"g")
-plot(S_2_Ratio,Force_Z_mean,'Color',"b")
-
-legend(["X" "Y" "Z"])
-ylabel("Normalized Forces (F/mg)")
-xlabel("Second moment of area Ration S_2")
+% figure
+% hold on
+% plot(S_2_Ratio,Force_X_mean,'Color',[1, 0.5, 0])
+% plot(S_2_Ratio,Force_Y_mean,'Color',"g")
+% plot(S_2_Ratio,Force_Z_mean,'Color',"b")
+% 
+% scatter(Damage_chord_Position, Force_Damage_chord_x, 'd', 'MarkerEdgeColor', [1, 0.5, 0], 'MarkerFaceColor', [1, 0.5, 0]);
+% scatter(Damage_chord_Position, Force_Damage_chord_y, 'd', 'MarkerEdgeColor', 'g', 'MarkerFaceColor', 'g');
+% scatter(Damage_chord_Position, Force_Damage_chord_z, 'd', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'b');
+% 
+% scatter(Damage_span_Position, Force_Damage_span_x, 'o', 'MarkerEdgeColor', [1, 0.5, 0], 'MarkerFaceColor', [1, 0.5, 0]);
+% scatter(Damage_span_Position, Force_Damage_span_y, 'o', 'MarkerEdgeColor', 'g', 'MarkerFaceColor', 'g');
+% scatter(Damage_span_Position, Force_Damage_span_z, 'o', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'b');
+% 
+% legend(["X" "Y" "Z"])
+% ylabel("Normalized Forces (F/mg)")
+% xlabel("Second moment of area Ration S_2")
 % axis([.5 1 0 1])
 hold off
 
 %% Stroke Amplitude versus force
-% figure
-% hold on
-% plot(Stroke_Amplitude_LH,Force_X_mean,'Color',[1, 0.5, 0])
-% plot(Stroke_Amplitude_LH,Force_Y_mean,'Color',"g")
-% plot(Stroke_Amplitude_LH,Force_Z_mean,'Color',"b")
-% 
-% plot([75, 100], [1, 1], '--', 'LineWidth', 1.5, 'Color', [0.6, 0.6, 0.6]); % Dashed line
-% 
-% scatter(Stroke_Position, Force_Stroke_x, 's', 'MarkerEdgeColor', [1, 0.5, 0], 'MarkerFaceColor', [1, 0.5, 0]);
-% scatter(Stroke_Position, Force_Stroke_y, 's', 'MarkerEdgeColor', 'g', 'MarkerFaceColor', 'g');
-% scatter(Stroke_Position, Force_Stroke_z, 's', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'b');
-% 
-% legend(["X" "Y" "Z"])
-% ylabel("Normalized Forces (F/mg)")
-% xlabel("Stroke Amplitude")
-% % axis([.5 1 0 1])
-% hold off
+figure
+hold on
+plot(Stroke_Amplitude_LH,Force_X_mean,'Color',[1, 0.5, 0])
+plot(Stroke_Amplitude_LH,Force_Y_mean,'Color',"g")
+plot(Stroke_Amplitude_LH,Force_Z_mean,'Color',"b")
+
+plot([75, 100], [1, 1], '--', 'LineWidth', 1.5, 'Color', [0.6, 0.6, 0.6]); % Dashed line
+
+scatter(Stroke_Position, Force_Stroke_x, 's', 'MarkerEdgeColor', [1, 0.5, 0], 'MarkerFaceColor', [1, 0.5, 0]);
+scatter(Stroke_Position, Force_Stroke_y, 's', 'MarkerEdgeColor', 'g', 'MarkerFaceColor', 'g');
+scatter(Stroke_Position, Force_Stroke_z, 's', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'b');
+
+legend(["X" "Y" "Z"])
+ylabel("Normalized Forces (F/mg)")
+xlabel("Stroke Amplitude")
+% axis([.5 1 0 1])
+hold off
 
 %% Torques means
 
@@ -142,47 +150,47 @@ for i=1:length(Fly_Master)
 end
 
 %% S_3 versus torque
-figure
-hold on
-plot(S_3_Ratio,Moment_Roll_mean,'Color',[1, 0.5, 0])
-plot(S_3_Ratio,Moment_Pitch_mean,'Color',"g")
-plot(S_3_Ratio,Moment_Yaw_mean,'Color',"b")
-
-plot([0, 1], [0, 0], '--', 'LineWidth', 1.5, 'Color', [0.6, 0.6, 0.6]); % Dashed line
-
-scatter(Damage_chord_Position, Torque_Damage_chord_Roll, 'd', 'MarkerEdgeColor', [1, 0.5, 0], 'MarkerFaceColor', [1, 0.5, 0]);
-scatter(Damage_chord_Position, Torque_Damage_chord_Pitch, 'd', 'MarkerEdgeColor', 'g', 'MarkerFaceColor', 'g');
-scatter(Damage_chord_Position, Torque_Damage_chord_Yaw, 'd', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'b');
-
-scatter(Damage_span_Position, Torque_Damage_span_Roll, 'o', 'MarkerEdgeColor', [1, 0.5, 0], 'MarkerFaceColor', [1, 0.5, 0]);
-scatter(Damage_span_Position, Torque_Damage_span_Pitch, 'o', 'MarkerEdgeColor', 'g', 'MarkerFaceColor', 'g');
-scatter(Damage_span_Position, Torque_Damage_span_Yaw, 'o', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'b');
-
-legend(["Roll" "Pitch" "Yaw"])
-ylabel("Normalized Torques (T/mgl)")
-xlabel("Third moment of area Ration S_3")
-axis([.5 1 -.05 .25])
-hold off
+% figure
+% hold on
+% plot(S_3_Ratio,Moment_Roll_mean,'Color',[1, 0.5, 0])
+% plot(S_3_Ratio,Moment_Pitch_mean,'Color',"g")
+% plot(S_3_Ratio,Moment_Yaw_mean,'Color',"b")
+% 
+% plot([0, 1], [0, 0], '--', 'LineWidth', 1.5, 'Color', [0.6, 0.6, 0.6]); % Dashed line
+% 
+% scatter(Damage_chord_Position, Torque_Damage_chord_Roll, 'd', 'MarkerEdgeColor', [1, 0.5, 0], 'MarkerFaceColor', [1, 0.5, 0]);
+% scatter(Damage_chord_Position, Torque_Damage_chord_Pitch, 'd', 'MarkerEdgeColor', 'g', 'MarkerFaceColor', 'g');
+% scatter(Damage_chord_Position, Torque_Damage_chord_Yaw, 'd', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'b');
+% 
+% scatter(Damage_span_Position, Torque_Damage_span_Roll, 'o', 'MarkerEdgeColor', [1, 0.5, 0], 'MarkerFaceColor', [1, 0.5, 0]);
+% scatter(Damage_span_Position, Torque_Damage_span_Pitch, 'o', 'MarkerEdgeColor', 'g', 'MarkerFaceColor', 'g');
+% scatter(Damage_span_Position, Torque_Damage_span_Yaw, 'o', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'b');
+% 
+% legend(["Roll" "Pitch" "Yaw"])
+% ylabel("Normalized Torques (T/mgl)")
+% xlabel("Third moment of area Ration S_3")
+% axis([.5 1 -.05 .25])
+% hold off
 
 %% Stroke Amplitude versus torque
 
-% figure
-% hold on
-% plot(Stroke_Amplitude_LH,Moment_Roll_mean,'Color',[1, 0.5, 0])
-% plot(Stroke_Amplitude_LH,Moment_Pitch_mean,'Color',"g")
-% plot(Stroke_Amplitude_LH,Moment_Yaw_mean,'Color',"b")
-% 
-% plot([75, 100], [0, 0], '--', 'LineWidth', 1.5, 'Color', [0.6, 0.6, 0.6]); % Dashed line
-% 
-% scatter(Stroke_Position, Torque_Stroke_Roll, 's', 'MarkerEdgeColor', [1, 0.5, 0], 'MarkerFaceColor', [1, 0.5, 0]);
-% scatter(Stroke_Position, Torque_Stroke_Pitch, 's', 'MarkerEdgeColor', 'g', 'MarkerFaceColor', 'g');
-% scatter(Stroke_Position, Torque_Stroke_Yaw, 's', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'b');
-%
-% legend(["Roll" "Pitch" "Yaw"])
-% ylabel("Normalized Torques (T/mgl)")
-% xlabel("Stroke Amplitude")
-% %axis([.5 1 0 1])
-% hold off
+figure
+hold on
+plot(Stroke_Amplitude_LH,Moment_Roll_mean,'Color',[1, 0.5, 0])
+plot(Stroke_Amplitude_LH,Moment_Pitch_mean,'Color',"g")
+plot(Stroke_Amplitude_LH,Moment_Yaw_mean,'Color',"b")
+
+plot([75, 100], [0, 0], '--', 'LineWidth', 1.5, 'Color', [0.6, 0.6, 0.6]); % Dashed line
+
+scatter(Stroke_Position, Torque_Stroke_Roll, 's', 'MarkerEdgeColor', [1, 0.5, 0], 'MarkerFaceColor', [1, 0.5, 0]);
+scatter(Stroke_Position, Torque_Stroke_Pitch, 's', 'MarkerEdgeColor', 'g', 'MarkerFaceColor', 'g');
+scatter(Stroke_Position, Torque_Stroke_Yaw, 's', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'b');
+
+legend(["Roll" "Pitch" "Yaw"])
+ylabel("Normalized Torques (T/mgl)")
+xlabel("Stroke Amplitude")
+%axis([.5 1 0 1])
+hold off
 
 %% Run Time End
 Duration = datetime-current_time

@@ -11,7 +11,7 @@ function [Fly] = Analysis_Robot(LH_Chord_Cut, LH_Span_Cut, RH_Chord_Cut, RH_Span
 % y-axis is to forward
 % x-axis is to the side (right positive)
 
-%% Uncomment to Clear Everything
+% %% Uncomment to Clear Everything
 % clear all
 % clc
 % %close all
@@ -95,10 +95,6 @@ Wing_Element_RH = FindLinearVelocity(Wing_Element_RH, Kinematics_RH.omega, Kinem
 [Wing_Element_LH, Fly.force_components.lh] = Force_Components(Wing_Element_LH, Kinematics_LH, Fly.wing_LH.del_r, metrics.airDensity, Fly.wing_LH.c);
 [Wing_Element_RH, Fly.force_components.rh] = Force_Components(Wing_Element_RH, Kinematics_RH, Fly.wing_RH.del_r, metrics.airDensity, Fly.wing_RH.c);
 
-%% Torque due to Inertia
-[Wing_Element_LH, Fly.force_components.lh.Inertia_torque] = Torque_Inertia(Wing_Element_LH,  Kinematics_LH, Fly.wing_LH.inertia, Kinematics_LH.R_inv2);
-[Wing_Element_RH, Fly.force_components.rh.Inertia_torque] = Torque_Inertia(Wing_Element_RH,  Kinematics_RH, Fly.wing_RH.inertia, Kinematics_RH.R_inv2);
-
 %% Find Force Directions
 ang_wing_plane = 0;
 Fly.force_total.Force_Body_LH = FindForceVectors(Fly.force_components.lh, Kinematics_LH.R_inv2, ang_wing_plane);
@@ -107,6 +103,10 @@ Fly.force_total.Force_Body_RH = FindForceVectors(Fly.force_components.rh, Kinema
 %% Torque due to Force offset
 Fly.force_total.Force_Body_LH.torque_forces_vec = Torque_Forces(Fly, Wing_Element_LH, Kinematics_LH.R_inv2, Fly.force_total.Force_Body_LH);
 Fly.force_total.Force_Body_RH.torque_forces_vec = Torque_Forces(Fly, Wing_Element_RH, Kinematics_RH.R_inv2, Fly.force_total.Force_Body_RH);
+
+%% Torque due to Inertia
+[Wing_Element_LH, Fly.force_components.lh.Inertia_torque] = Torque_Inertia(Wing_Element_LH,  Kinematics_LH, Fly.wing_LH.inertia, Kinematics_LH.R_inv2);
+[Wing_Element_RH, Fly.force_components.rh.Inertia_torque] = Torque_Inertia(Wing_Element_RH,  Kinematics_RH, Fly.wing_RH.inertia, Kinematics_RH.R_inv2);
 
 %% Find Torque Directions
 Fly.force_total.Force_Body_LH = FindTorqueVectors(Fly.force_components.lh, Kinematics_LH.R_inv2, Fly.force_total.Force_Body_LH);

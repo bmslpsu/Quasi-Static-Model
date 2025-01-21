@@ -26,7 +26,7 @@ function [element, force_components] = Force_Components(element, Kinematics, del
     AM_wing_torque = zeros(3, N);
 
     %% Compute Coefficients
-    % Based on angle of attack using Dickinson's 2002 equations
+    % Based on angle of attack using Dickinson's 199 equations
     angle_of_attack_deg = rad2deg(Kinematics.psi);
     C_L = 0.225 + 1.58 * sin(deg2rad(2.13 * abs(angle_of_attack_deg) - 7.2));
     C_D = 1.92 - 1.55 * cos(deg2rad(2.04 * angle_of_attack_deg - 9.82));
@@ -95,7 +95,8 @@ function [element, force_components] = Force_Components(element, Kinematics, del
             % Added mass force magnitude
             part1 = (rho * pi * c(i)^2 / 4) * del_r;
             part2 = (dot(element(i).linear_vel(:, j), element(i).linear_acc(:, j)) * sin(abs(Kinematics.psi(j)))) / element(i).linear_vel_norm(j);
-            part3 = element(i).linear_vel_norm(j) * deg2rad(Kinematics.psi_d(j)) * cos(abs(Kinematics.psi(j)));
+            % part3 = element(i).linear_vel_norm(j) * deg2rad(Kinematics.psi_d(j)) * cos(abs(Kinematics.psi(j)));
+            part3 = element(i).linear_vel_norm(j) * Kinematics.psi_d(j) * cos(abs(Kinematics.psi(j)));
 
             element(i).force_AddedMass(j) = part1 * (part2 + part3);
 

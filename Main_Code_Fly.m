@@ -15,6 +15,9 @@ Wing_damage_RH = 100;
 filePath = 'C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Experimental Data\wing_area_ratio.mat';
 load(filePath); % Load the MAT file
 
+filePath = 'C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Experimental Data\Wing_Stroke_Plane.mat';
+load(filePath); % Load the MAT file
+
 filePath = 'C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Experimental Data\damage_side.mat';
 load(filePath); % Load the MAT file
 
@@ -67,9 +70,13 @@ for i=1:length(Fly_Numbers)
             period_text = 'Pre Cut';
             Wing_damage_LH = 100;
             Wing_damage_RH = 100;
+            index = find(Wing_Stroke_Plane.Fly == Fly_Numbers(i));
+            ang_wing_plane = Wing_Stroke_Plane.Pre_Cut(index);
         elseif k==2
             Period = Post_cut;
             period_text = 'Post Cut';
+            index = find(Wing_Stroke_Plane.Fly == Fly_Numbers(i));
+            ang_wing_plane =  Wing_Stroke_Plane.Post_Cut(index);
             if sum(ismember(left_damage_list, Fly_Numbers(i)))==1
                 Wing_damage_LH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
                 Wing_damage_RH = 100;
@@ -81,6 +88,8 @@ for i=1:length(Fly_Numbers)
         else
             Period = Steady_State;
             period_text = 'Steady State';
+            index = find(Wing_Stroke_Plane.Fly == Fly_Numbers(i));
+            ang_wing_plane =  Wing_Stroke_Plane.Post_Cut(index);
             if sum(ismember(left_damage_list, Fly_Numbers(i)))==1
                 Wing_damage_LH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
                 Wing_damage_RH = 100;
@@ -96,7 +105,7 @@ for i=1:length(Fly_Numbers)
         % Period = peakIndices(1):peakIndices(end);
         time = Period;
 
-        Fly_Master(fly_count).Fly  = Analysis_Fly(Wing_damage_LH, Wing_damage_RH, 100, 100,100,100, i, FilteredAngleL, FilteredAngleR, time);
+        Fly_Master(fly_count).Fly  = Analysis_Fly(Wing_damage_LH, Wing_damage_RH, 100, 100,100,100, i, FilteredAngleL, FilteredAngleR, time, ang_wing_plane);
         Fly_Master(fly_count).chord_cut_LH = Wing_damage_LH;
         Fly_Master(fly_count).chord_cut_RH = Wing_damage_RH;
         Fly_Master(fly_count).span_cut_LH = 100;
@@ -173,51 +182,58 @@ end
 %% S_2 versus force
 figure
 hold on
-scatter(S_2_Ratio([1:6,8:11,13:14,16:19,21:22,24:25]),Force_X_mean([1:6,8:11,13:14,16:19,21:22,24:25]),'MarkerEdgeColor',[1, 0.5, 0])
-scatter(S_2_Ratio([1:6,8:11,13:14,16:19,21:22,24:25]),Force_Y_mean([1:6,8:11,13:14,16:19,21:22,24:25]),'MarkerEdgeColor',"g")
-scatter(S_2_Ratio([1:6,8:11,13:14,16:19,21:22,24:25]),Force_Z_mean([1:6,8:11,13:14,16:19,21:22,24:25]),'MarkerEdgeColor',"b")
 
-% Initialize variables to store unique S_2_Ratio values and their corresponding means
-unique_S2 = unique(S_2_Ratio([1:6,8:11,13:14,16:19,21:22,24:25])); % Get the unique S_2_Ratio values
 
-% Loop through each unique S_2_Ratio
+% Extract unique S_2_Ratio values
+S_2_Ratio_holder = [1:6,8:11,13:14,16:19,21:22,24:25];
+unique_S2 = unique(S_2_Ratio(S_2_Ratio_holder));
+
+% Initialize arrays to store the means for each unique S_2_Ratio
+mean_force_x_means = zeros(size(unique_S2));
+mean_force_y_means = zeros(size(unique_S2));
+mean_force_z_means = zeros(size(unique_S2));
+
+% Calculate the mean for each unique S_2_Ratio
 for i = 1:length(unique_S2)
-    % Find the indices of the current S_2_Ratio
-    indices = find(S_2_Ratio([1:6,8:11,13:14,16:19,21:22,24:25]) == unique_S2(i));
+    % Find indices corresponding to the current unique S_2_Ratio
+    indices = find(S_2_Ratio(S_2_Ratio_holder) == unique_S2(i))
     
-    % Calculate the mean of Force_X_mean for these indices
-    mean_force_x_means(i) = mean(Force_X_mean(indices));
-    mean_force_y_means(i) = mean(Force_Y_mean(indices));
-    mean_force_z_means(i) = mean(Force_Z_mean(indices));
+    for j = 1:length(indices)
+        k = S_2_Ratio_holder(indices(j))
+    % Compute means for X, Y, and Z forces
+    mean_force_x_means(i) = mean(Force_X_mean(k));
+    mean_force_y_means(i) = mean(Force_Y_mean(k));
+    mean_force_z_means(i) = mean(Force_Z_mean(k));
+    end
 end
 
+% Scatter all individual points
+scatter(unique_S2, mean_force_x_means, 'MarkerEdgeColor', [1, 0.5, 0])
+scatter(unique_S2, mean_force_y_means, 'MarkerEdgeColor', "g")
+scatter(unique_S2, mean_force_z_means, 'MarkerEdgeColor', "b")
 
-% Fit a line (1st-degree polynomial) to the data
-px = polyfit(unique_S2, mean_force_x_means, 1);
-% Evaluate the line at the x data points
+
+% Fit lines (1st-degree polynomial) to the mean data
+px = polyfit(unique_S2, mean_force_x_means, 1); % X forces
+py = polyfit(unique_S2, mean_force_y_means, 1); % Y forces
+pz = polyfit(unique_S2, mean_force_z_means, 1); % Z forces
+
+% Evaluate the fitted lines at the unique S_2_Ratio values
 X_fit = polyval(px, unique_S2);
-
-% Fit a line (1st-degree polynomial) to the data
-py = polyfit(unique_S2, mean_force_y_means, 1);
-% Evaluate the line at the x data points
 Y_fit = polyval(py, unique_S2);
-
-% Fit a line (1st-degree polynomial) to the data
-pz = polyfit(unique_S2, mean_force_z_means, 1);
-% Evaluate the line at the x data points
 Z_fit = polyval(pz, unique_S2);
 
+% Plot the fitted lines
+plot(unique_S2, X_fit, 'Color', [1, 0.5, 0])
+plot(unique_S2, Y_fit, 'Color', "g")
+plot(unique_S2, Z_fit, 'Color', "b")
 
-plot(unique_S2,X_fit,'Color',[1, 0.5, 0])
-plot(unique_S2,Y_fit,'Color',"g")
-plot(unique_S2,Z_fit,'Color',"b")
-
-
+% Labels and legend
 ylabel("Normalized Forces (F/mg)")
-xlabel("Second moment of area Ration S_2")
-legend(["X" "Y" "Z"])
-% axis([0.1 1 -1 1])
+xlabel("Second Moment of Area Ratio S_2")
+legend(["X data" "Y data" "Z data", "Fit X", "Fit Y", "Fit Z"])
 hold off
+
 
 %% Torques means
 
