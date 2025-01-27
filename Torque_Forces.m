@@ -1,9 +1,9 @@
-function [forces_torque] = Torque_Forces(Fly, element, R_inv2, force)
+function [forces_torque] = Torque_Forces(Dynamics, element, R_inv2, force)
     %% Preamble
     disp('Force Torque Calculation - Start');
 
     %% Initialization
-    N = length(Fly.force_total.Force_Body_LH.Lift_torque);
+    N = length(Dynamics.Frame_Body.LH.Torque_Lift);
     Force_torque = zeros(3, N);
 
     %% Compute Total Center of Pressure (COP)
@@ -24,7 +24,7 @@ function [forces_torque] = Torque_Forces(Fly, element, R_inv2, force)
         CG_wing = CG_joint + R_inv2(:, :, j) * total_cop(:, j);
         CG_body = [0; 0; 0]; %rotx(deg2rad(-32.5)) * Fly.total.CG';
         CG_Delta = CG_body - CG_wing;
-        Force_torque(:, j) = cross(CG_Delta, force.force_total_vec(:, j));
+        Force_torque(:, j) = cross(CG_Delta, force.Force_Total(:, j));
     end
 
     %% Output Results
