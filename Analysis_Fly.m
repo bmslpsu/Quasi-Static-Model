@@ -1,4 +1,4 @@
-function [Fly] = Analysis_Fly(LH_Chord_Cut, LH_Span_Cut, RH_Chord_Cut, RH_Span_Cut, LH_Stroke_Amplitude, RH_Stroke_Amplitude, fly_num, FilteredAngleL, FilteredAngleR, period, ang_wing_plane) 
+function [Fly] = Analysis_Fly(LH_Chord_Cut, LH_Span_Cut, RH_Chord_Cut, RH_Span_Cut, LH_Stroke_Amplitude, RH_Stroke_Amplitude, fly_num, FilteredAngleL, FilteredAngleR, period, ang_wing_plane_LH, ang_wing_plane_RH) 
 %% Note on the Axese
 
 % For the wing
@@ -28,6 +28,20 @@ Body_Shape = struct();
 Fly = struct();
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Wing and Boddy Selection
+
+% LH and RH wing uploader
+[Morphology.Wing_LH.wing_shape, Morphology.Wing_RH.wing_shape, Morphology.Body.Morphology.Body_shape, Morphology.Body.Joint] = wingPlotGUI(Wing_Shape_LH, Wing_Shape_RH, Body_Shape,true,LH_Span_Cut,LH_Chord_Cut,RH_Span_Cut,RH_Chord_Cut);
+
+% Body and Wing physical Analyis
+[Morphology] = mass_and_inertia(Morphology.Wing_LH.wing_shape,Morphology.Wing_RH.wing_shape, Morphology.Body.Morphology.Body_shape, Morphology);
+
+Morphology.Body.Body_angle = 45;
+
+Morphology.Wing_LH.Wing_Plane_angle = ang_wing_plane_LH;
+Morphology.Wing_RH.Wing_Plane_angle = ang_wing_plane_RH;
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Time Set Up
 %Store time in Fly structure
 Fly.time = period;
@@ -37,48 +51,26 @@ dt=.000125;
 Kinematics.LH = Kin(FilteredAngleL(period,2), FilteredAngleL(period,1).*LH_Stroke_Amplitude/100, FilteredAngleL(period,3), 0, dt);
 Kinematics.RH = Kin(FilteredAngleR(period,2), FilteredAngleR(period,1).*RH_Stroke_Amplitude/100, FilteredAngleR(period,3), 0, dt);
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Wing and Boddy Selection
+%Store time in Kinematics structure
+Kinematics.time = period;
+Kinematics.LH.N = length(period);
+Kinematics.RH.N = length(period);
 
-% LH and RH wing uploader
-[Morphology.Wing_LH.wing_shape, Morphology.Wing_RH.wing_shape, Morphology.Body.Morphology.Body_shape, Morphology.Body.Joint] = wingPlotGUI(Wing_Shape_LH, Wing_Shape_RH, Body_Shape,true,LH_Span_Cut,LH_Chord_Cut,RH_Span_Cut,RH_Chord_Cut);
-
-% Body and Wing physical Analyis
-[Morphology] = mass_and_inertia(Morphology.Wing_LH.wing_shape,Morphology.Wing_RH.wing_shape, Morphology.Body.Morphology.Body_shape, Morphology);
-
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find the Location of the Center of Pressure for each Wing Element
 % Calculates the center of pressure of each wing element 
-Wing_Element_LH = Center_of_Pressure(Kinematics.LH.psi, Morphology.Wing_LH.n, Morphology.Wing_LH.c, Kinematics.LH.R_inv2, Morphology.Wing_LH.wing_length, Morphology.Wing_LH.wing_shape);
-Wing_Element_RH = Center_of_Pressure(Kinematics.RH.psi, Morphology.Wing_RH.n, Morphology.Wing_RH.c, Kinematics.RH.R_inv2, Morphology.Wing_RH.wing_length, Morphology.Wing_RH.wing_shape);
+Wing_Element_LH = Center_of_Pressure(Kinematics.LH, Morphology.Wing_LH);
+Wing_Element_RH = Center_of_Pressure(Kinematics.RH, Morphology.Wing_RH);
 
 %% Find the Linear Velocity of each Element for each Time Step
 % Calculates the linear velocity of each element based on the magnitude of
 % the angluar velocity
-Wing_Element_LH = Linear_Kinematics(Wing_Element_LH, Kinematics.LH.omega, Kinematics.LH.alpha);
-Wing_Element_RH = Linear_Kinematics(Wing_Element_RH, Kinematics.RH.omega, Kinematics.RH.alpha);
+Wing_Element_LH = Kin_Linear(Kinematics.LH, Wing_Element_LH);
+Wing_Element_RH = Kin_Linear(Kinematics.RH, Wing_Element_RH);
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find the Lift, Drag, Rotation, and Added Mass Forces and Torques Acting on Each Wing
-[Wing_Element_LH, Dynamics.Frame_Wing.LH] = Force_Components(Wing_Element_LH, Kinematics.LH, Morphology.Wing_LH.del_r, metrics.airDensity, Morphology.Wing_LH.c);
-[Wing_Element_RH, Dynamics.Frame_Wing.RH] = Force_Components(Wing_Element_RH, Kinematics.RH, Morphology.Wing_RH.del_r, metrics.airDensity, Morphology.Wing_RH.c);
-
-%% Find Force Directions
-Dynamics.Frame_Body.LH = Force_Body_Frame(Dynamics.Frame_Wing.LH, Kinematics.LH.R_inv2, ang_wing_plane);
-Dynamics.Frame_Body.RH = Force_Body_Frame(Dynamics.Frame_Wing.RH, Kinematics.RH.R_inv2, ang_wing_plane);
-
-%% Find the Torque due to Force offset
-Dynamics.Frame_Body.LH.Torque_Due_to_Forces = Torque_Forces(Dynamics, Wing_Element_LH, Kinematics.LH.R_inv2, Dynamics.Frame_Wing.LH);
-Dynamics.Frame_Body.RH.Torque_Due_to_Forces = Torque_Forces(Dynamics, Wing_Element_RH, Kinematics.RH.R_inv2, Dynamics.Frame_Wing.RH);
-
-%% Find the Torque due to Inertia
-[Wing_Element_LH, Dynamics.Frame_Wing.LH.Torque_Inertia] = Torque_Inertia(Wing_Element_LH,  Kinematics.LH, Morphology.Wing_LH.inertia, Kinematics.LH.R_inv2);
-[Wing_Element_RH, Dynamics.Frame_Wing.RH.Torque_Inertia] = Torque_Inertia(Wing_Element_RH,  Kinematics.RH, Morphology.Wing_RH.inertia, Kinematics.RH.R_inv2);
-
-%% Find Torque Directions
-Dynamics.Frame_Body.LH = Torque_Body_Frame(Dynamics.Frame_Wing.LH, Kinematics.LH.R_inv2, Dynamics.Frame_Body.LH);
-Dynamics.Frame_Body.RH = Torque_Body_Frame(Dynamics.Frame_Wing.RH, Kinematics.RH.R_inv2, Dynamics.Frame_Body.RH);
+[Wing_Element_LH, Dynamics.Frame_Wing.LH, Dynamics.Frame_Body.LH ] = Dynamic_Components(Kinematics.LH, Wing_Element_LH, Morphology.Wing_LH, Morphology, metrics.airDensity);
+[Wing_Element_RH, Dynamics.Frame_Wing.RH, Dynamics.Frame_Body.RH ] = Dynamic_Components(Kinematics.RH, Wing_Element_RH, Morphology.Wing_RH, Morphology, metrics.airDensity);
 
 %% Rotate Forces and Torque from Calcualted Frame (LH) to True Frame (RH)
 [Dynamics.Frame_Body.RH] = True_Frame(Dynamics.Frame_Body.RH);

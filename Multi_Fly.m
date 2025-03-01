@@ -15,7 +15,7 @@ Wing_damage_RH = 100;
 filePath = 'C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Experimental Data\wing_area_ratio.mat';
 load(filePath); % Load the MAT file
 
-filePath = 'C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Experimental Data\Wing_Stroke_Plane.mat';
+filePath = 'C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Experimental Data\Wing_Stroke_Angle\Wing_Stroke_Plane.mat';
 load(filePath); % Load the MAT file
 
 filePath = 'C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Experimental Data\damage_side.mat';
@@ -51,7 +51,7 @@ for i=1:length(Fly_Numbers)
 
 
 
-    % %% Find each period via peak
+    % Find each period via peak
     [peaks, peakIndices] = findpeaks(FilteredAngleL(:,1));
 
     Pre_cut = 1:200;
@@ -71,33 +71,50 @@ for i=1:length(Fly_Numbers)
             Wing_damage_LH = 100;
             Wing_damage_RH = 100;
             index = find(Wing_Stroke_Plane.Fly == Fly_Numbers(i));
-            ang_wing_plane = Wing_Stroke_Plane.Pre_Cut(index);
+            ang_wing_plane_LH = Wing_Stroke_Plane.LH_Pre(index);
+            ang_wing_plane_RH = Wing_Stroke_Plane.RH_Pre(index);
+            Kinematics_LH = FilteredAngleL;
+            Kinematics_RH = FilteredAngleR;
         elseif k==2
             Period = Post_cut;
             period_text = 'Post Cut';
             index = find(Wing_Stroke_Plane.Fly == Fly_Numbers(i));
-            ang_wing_plane =  Wing_Stroke_Plane.Post_Cut(index);
             if sum(ismember(left_damage_list, Fly_Numbers(i)))==1
+                Kinematics_LH = FilteredAngleL;
+                Kinematics_RH = FilteredAngleR;
+                ang_wing_plane_LH = Wing_Stroke_Plane.LH_Post(index);
+                ang_wing_plane_RH = Wing_Stroke_Plane.RH_Post(index);
                 Wing_damage_LH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
                 Wing_damage_RH = 100;
             else
-                Wing_damage_LH = 100;
-                Wing_damage_RH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
+                Kinematics_LH = FilteredAngleR;
+                Kinematics_RH = FilteredAngleL;
+                ang_wing_plane_LH = Wing_Stroke_Plane.RH_Post(index);
+                ang_wing_plane_RH = Wing_Stroke_Plane.LH_Post(index);
+                Wing_damage_LH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
+                Wing_damage_RH = 100;
             end
-            total_states = total_states +1;
+            total_states = total_states + 1;
         else
             Period = Steady_State;
             period_text = 'Steady State';
             index = find(Wing_Stroke_Plane.Fly == Fly_Numbers(i));
-            ang_wing_plane =  Wing_Stroke_Plane.Post_Cut(index);
             if sum(ismember(left_damage_list, Fly_Numbers(i)))==1
+                Kinematics_LH = FilteredAngleL;
+                Kinematics_RH = FilteredAngleR;
+                ang_wing_plane_LH = Wing_Stroke_Plane.LH_Post(index);
+                ang_wing_plane_RH = Wing_Stroke_Plane.RH_Post(index);
                 Wing_damage_LH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
                 Wing_damage_RH = 100;
             else
-                Wing_damage_LH = 100;
-                Wing_damage_RH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
+                Kinematics_LH = FilteredAngleR;
+                Kinematics_RH = FilteredAngleL;
+                ang_wing_plane_LH = Wing_Stroke_Plane.RH_Post(index);
+                ang_wing_plane_RH = Wing_Stroke_Plane.LH_Post(index);
+                Wing_damage_LH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
+                Wing_damage_RH = 100;
             end
-            total_states = total_states +1;
+            total_states = total_states + 1;
         end
 
         %% Run Simulation
@@ -105,7 +122,7 @@ for i=1:length(Fly_Numbers)
         % Period = peakIndices(1):peakIndices(end);
         time = Period;
 
-        Fly_Master(fly_count).Fly  = Analysis_Fly(Wing_damage_LH, Wing_damage_RH, 100, 100,100,100, i, FilteredAngleL, FilteredAngleR, time, ang_wing_plane);
+        Fly_Master(fly_count).Fly  = Analysis_Fly(Wing_damage_LH, Wing_damage_RH, 100, 100,100,100, i, Kinematics_LH, Kinematics_RH, time, ang_wing_plane_LH, ang_wing_plane_RH);
         Fly_Master(fly_count).chord_cut_LH = Wing_damage_LH;
         Fly_Master(fly_count).chord_cut_RH = Wing_damage_RH;
         Fly_Master(fly_count).span_cut_LH = 100;
@@ -139,17 +156,15 @@ Duration = datetime-current_time
 for i=1:length(Fly_Master)
     S_2_Ratio(i) = Fly_Master(i).Fly.Morphology.total.S_2_Ratio;
     Force_X_mean(i) = (mean(Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Force_Total(1,:)) + mean(Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Force_Total(1,:)))/Fly_Master(i).Fly.Morphology.total.weight;
-    Force_Y_mean(i) = (mean(Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Force_Total(3,:)) + mean(Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Force_Total(3,:)))/Fly_Master(i).Fly.Morphology.total.weight;
-    Force_Z_mean(i) = (mean(Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Force_Total(2,:)) + mean(Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Force_Total(2,:)))/Fly_Master(i).Fly.Morphology.total.weight;
+    Force_Y_mean(i) = -(mean(Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Force_Total(2,:)) + mean(Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Force_Total(2,:)))/Fly_Master(i).Fly.Morphology.total.weight;
+    Force_Z_mean(i) = (mean(Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Force_Total(3,:)) + mean(Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Force_Total(3,:)))/Fly_Master(i).Fly.Morphology.total.weight;
 end
 
 %% Torques means
 
 for i=1:length(Fly_Master)
     S_3_Ratio(i) = Fly_Master(i).Fly.Morphology.total.S_3_Ratio;
-    Moment_Roll_mean(i) = mean((Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Torque_Total(1,:) + Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Torque_Total(1,:)) / (Fly_Master(i).Fly.Morphology.total.weight * (Fly_Master(i).Fly.Morphology.Wing_LH.wing_length+Fly_Master(i).Fly.Morphology.Wing_RH.wing_length)/2));
-    Moment_Pitch_mean(i) = mean((Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Torque_Total(3,:) + Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Torque_Total(3,:)) / (Fly_Master(i).Fly.Morphology.total.weight * (Fly_Master(i).Fly.Morphology.Wing_LH.wing_length+Fly_Master(i).Fly.Morphology.Wing_RH.wing_length)/2));
-    Moment_Yaw_mean(i) = mean((Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Torque_Total(2,:) + Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Torque_Total(2,:)) / (Fly_Master(i).Fly.Morphology.total.weight * (Fly_Master(i).Fly.Morphology.Wing_LH.wing_length+Fly_Master(i).Fly.Morphology.Wing_RH.wing_length)/2));
+    Moment_Pitch_mean(i) = -mean((Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Torque_Total(1,:) + Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Torque_Total(1,:)) / (Fly_Master(i).Fly.Morphology.total.weight * (Fly_Master(i).Fly.Morphology.Wing_LH.wing_length+Fly_Master(i).Fly.Morphology.Wing_RH.wing_length)/2));
+    Moment_Roll_mean(i) = (mean((Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Torque_Total(2,:) + Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Torque_Total(2,:)) / (Fly_Master(i).Fly.Morphology.total.weight * (Fly_Master(i).Fly.Morphology.Wing_LH.wing_length+Fly_Master(i).Fly.Morphology.Wing_RH.wing_length)/2)));
+    Moment_Yaw_mean(i) = -(mean((Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Torque_Total(3,:) + Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Torque_Total(3,:)) / (Fly_Master(i).Fly.Morphology.total.weight * (Fly_Master(i).Fly.Morphology.Wing_LH.wing_length+Fly_Master(i).Fly.Morphology.Wing_RH.wing_length)/2)));
 end
-
-

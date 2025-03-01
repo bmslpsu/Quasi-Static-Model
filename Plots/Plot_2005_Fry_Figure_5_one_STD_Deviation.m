@@ -1,4 +1,5 @@
 fly_num = [1, 3, 5, 8, 10, 13, 16, 18, 21, 24];
+%fly_num=fly_num+1;
 
 units_force = 10^-6;
 units_torque = 10^-10;
@@ -114,6 +115,7 @@ plot(normalizedTime, mean(meanForcesLHAllFlies(2, :, validFlies), 3), 'r', 'Line
 plot(normalizedTime, mean(meanForcesRHAllFlies(2, :, validFlies), 3), 'b', 'LineWidth', 1.5); % RH line
 title('Upward Force');
 ylabel('Force (N)');
+ylim([-5*10^-5 5*10^-5])
 
 % Torques (Z-Component)
 subplot(3, 2, 2);
@@ -127,6 +129,7 @@ plot(normalizedTime, mean(meanTorquesLHAllFlies(2, :, validFlies), 3), 'r', 'Lin
 plot(normalizedTime, mean(meanTorquesRHAllFlies(2, :, validFlies), 3), 'b', 'LineWidth', 1.5); % RH line
 title('Yaw Torque');
 ylabel('Torque (Nm)');
+ylim([-5*10^-8 5*10^-8])
 
 % Forces (Y-Component)
 subplot(3, 2, 3);
@@ -140,6 +143,7 @@ plot(normalizedTime, mean(meanForcesLHAllFlies(1, :, validFlies), 3), 'r', 'Line
 plot(normalizedTime, mean(meanForcesRHAllFlies(1, :, validFlies), 3), 'b', 'LineWidth', 1.5); % RH line
 title('Forward Force');
 ylabel('Force (N)');
+ylim([-5*10^-5 5*10^-5])
 
 % Torques (Y-Component)
 subplot(3, 2, 4);
@@ -153,6 +157,7 @@ plot(normalizedTime, mean(meanTorquesLHAllFlies(1, :, validFlies), 3), 'r', 'Lin
 plot(normalizedTime, mean(meanTorquesRHAllFlies(1, :, validFlies), 3), 'b', 'LineWidth', 1.5); % RH line
 title('Roll Torque');
 ylabel('Torque (Nm)');
+ylim([-5*10^-8 5*10^-8])
 
 % Forces (X-Component)
 subplot(3, 2, 5);
@@ -167,7 +172,7 @@ plot(normalizedTime, mean(meanForcesRHAllFlies(3, :, validFlies), 3), 'b', 'Line
 title('Sideward Force');
 ylabel('Force (N)');
 xlabel('Stroke Cycle');
-
+ylim([-5*10^-5 5*10^-5])
 
 % Torques (X-Component)
 subplot(3, 2, 6);
@@ -182,5 +187,6 @@ plot(normalizedTime, mean(meanTorquesRHAllFlies(3, :, validFlies), 3), 'b', 'Lin
 title('Pitch Torque');
 ylabel('Torque (Nm)');
 xlabel('Stroke Cycle');
+ylim([-5*10^-8 5*10^-8])
 
 sgtitle('Filtered Forces and Torques with Standard Deviation');

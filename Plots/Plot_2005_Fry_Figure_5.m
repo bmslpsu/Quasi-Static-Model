@@ -1,4 +1,5 @@
 fly_num = [1, 3, 5, 8, 10, 13, 16, 18, 21, 24];
+fly_num=fly_num+1;
 
 units_force = 10^-6;
 units_torque = 10^-10;
@@ -15,10 +16,10 @@ meanTorquesRHAllFlies = zeros(3, numTimePoints, length(fly_num)); % For RH torqu
 for flyIdx = 1:length(fly_num)
     % Extract the phi, force, and torque data for the current fly
     phi = Fly_Master(fly_num(flyIdx)).Fly.Kinematics.LH.phi;
-    force_lh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.LH.Force_Total * units_force;
-    force_rh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.RH.Force_Total * units_force;
-    torque_lh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.LH.Torque_Total * units_torque;
-    torque_rh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.RH.Torque_Total * units_torque;
+    force_lh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.LH.Force_Total * units_force.* [1;-1;1];
+    force_rh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.RH.Force_Total * units_force.* [1;-1;1];
+    torque_lh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.LH.Torque_Total * units_torque.* [-1;1;1];
+    torque_rh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.RH.Torque_Total * units_torque.* [-1;1;1];
 
     % Find Peaks and Validate
     [peaks, peakIndices] = findpeaks(phi);
@@ -85,72 +86,19 @@ figure;
 subplot(3, 2, 1);
 hold on;
 fill([normalizedTime, fliplr(normalizedTime)], ...
-     [meanForcesSumAcrossFlies(2, :) + stdForcesSumAcrossFlies(2, :), ...
-      fliplr(meanForcesSumAcrossFlies(2, :) - stdForcesSumAcrossFlies(2, :))], ...
-     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded region
-plot(normalizedTime, meanForcesSumAcrossFlies(2, :), 'k', 'LineWidth', 2); % Mean line
-plot(normalizedTime, mean(meanForcesLHAllFlies(2, :, :), 3), 'r', 'LineWidth', 1.5); % LH line
-plot(normalizedTime, mean(meanForcesRHAllFlies(2, :, :), 3), 'b', 'LineWidth', 1.5); % RH line
-title('Upward Force');
-ylabel('Force (N)');
-
-
-% Torques (Z-Component)
-subplot(3, 2, 2);
-hold on;
-fill([normalizedTime, fliplr(normalizedTime)], ...
-     [meanTorquesSumAcrossFlies(2, :) + stdTorquesSumAcrossFlies(2, :), ...
-      fliplr(meanTorquesSumAcrossFlies(2, :) - stdTorquesSumAcrossFlies(2, :))], ...
-     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded region
-plot(normalizedTime, meanTorquesSumAcrossFlies(2, :), 'k', 'LineWidth', 2); % Mean line
-plot(normalizedTime, mean(meanTorquesLHAllFlies(2, :, :), 3), 'r', 'LineWidth', 1.5); % LH line
-plot(normalizedTime, mean(meanTorquesRHAllFlies(2, :, :), 3), 'b', 'LineWidth', 1.5); % RH line
-title('Yaw Torque');
-ylabel('Torque (Nm)');
-
-% Forces (Y-Component)
-subplot(3, 2, 3);
-hold on;
-fill([normalizedTime, fliplr(normalizedTime)], ...
-     [meanForcesSumAcrossFlies(1, :) + stdForcesSumAcrossFlies(1, :), ...
-      fliplr(meanForcesSumAcrossFlies(1, :) - stdForcesSumAcrossFlies(1, :))], ...
-     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded region
-plot(normalizedTime, meanForcesSumAcrossFlies(1, :), 'k', 'LineWidth', 2); % Mean line
-plot(normalizedTime, mean(meanForcesLHAllFlies(1, :, :), 3), 'r', 'LineWidth', 1.5); % LH line
-plot(normalizedTime, mean(meanForcesRHAllFlies(1, :, :), 3), 'b', 'LineWidth', 1.5); % RH line
-title('Forward Force');
-ylabel('Force (N)');
-
-% Torques (Y-Component)
-subplot(3, 2, 4);
-hold on;
-fill([normalizedTime, fliplr(normalizedTime)], ...
-     [meanTorquesSumAcrossFlies(1, :) + stdTorquesSumAcrossFlies(1, :), ...
-      fliplr(meanTorquesSumAcrossFlies(1, :) - stdTorquesSumAcrossFlies(1, :))], ...
-     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded region
-plot(normalizedTime, meanTorquesSumAcrossFlies(1, :), 'k', 'LineWidth', 2); % Mean line
-plot(normalizedTime, mean(meanTorquesLHAllFlies(1, :, :), 3), 'r', 'LineWidth', 1.5); % LH line
-plot(normalizedTime, mean(meanTorquesRHAllFlies(1, :, :), 3), 'b', 'LineWidth', 1.5); % RH line
-title('Roll Torque');
-ylabel('Torque (Nm)');
-
-% Forces (X-Component)
-subplot(3, 2, 5);
-hold on;
-fill([normalizedTime, fliplr(normalizedTime)], ...
      [meanForcesSumAcrossFlies(3, :) + stdForcesSumAcrossFlies(3, :), ...
       fliplr(meanForcesSumAcrossFlies(3, :) - stdForcesSumAcrossFlies(3, :))], ...
      [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded region
 plot(normalizedTime, meanForcesSumAcrossFlies(3, :), 'k', 'LineWidth', 2); % Mean line
 plot(normalizedTime, mean(meanForcesLHAllFlies(3, :, :), 3), 'r', 'LineWidth', 1.5); % LH line
 plot(normalizedTime, mean(meanForcesRHAllFlies(3, :, :), 3), 'b', 'LineWidth', 1.5); % RH line
-title('Sideward Force');
+title('Upward Force');
 ylabel('Force (N)');
-xlabel('Stroke Cycle');
+ylim([-5*10^-5 5*10^-5])
 
 
-% Torques (X-Component)
-subplot(3, 2, 6);
+% Torques (Z-Component)
+subplot(3, 2, 2);
 hold on;
 fill([normalizedTime, fliplr(normalizedTime)], ...
      [meanTorquesSumAcrossFlies(3, :) + stdTorquesSumAcrossFlies(3, :), ...
@@ -159,8 +107,66 @@ fill([normalizedTime, fliplr(normalizedTime)], ...
 plot(normalizedTime, meanTorquesSumAcrossFlies(3, :), 'k', 'LineWidth', 2); % Mean line
 plot(normalizedTime, mean(meanTorquesLHAllFlies(3, :, :), 3), 'r', 'LineWidth', 1.5); % LH line
 plot(normalizedTime, mean(meanTorquesRHAllFlies(3, :, :), 3), 'b', 'LineWidth', 1.5); % RH line
+title('Yaw Torque');
+ylabel('Torque (Nm)');
+ylim([-5*10^-8 5*10^-8])
+
+% Forces (Y-Component)
+subplot(3, 2, 3);
+hold on;
+fill([normalizedTime, fliplr(normalizedTime)], ...
+     [meanForcesSumAcrossFlies(2, :) + stdForcesSumAcrossFlies(2, :), ...
+      fliplr(meanForcesSumAcrossFlies(2, :) - stdForcesSumAcrossFlies(2, :))], ...
+     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded region
+plot(normalizedTime, meanForcesSumAcrossFlies(2, :), 'k', 'LineWidth', 2); % Mean line
+plot(normalizedTime, mean(meanForcesLHAllFlies(2, :, :), 3), 'r', 'LineWidth', 1.5); % LH line
+plot(normalizedTime, mean(meanForcesRHAllFlies(2, :, :), 3), 'b', 'LineWidth', 1.5); % RH line
+title('Forward Force');
+ylabel('Force (N)');
+ylim([-5*10^-5 5*10^-5])
+
+% Torques (Y-Component)
+subplot(3, 2, 4);
+hold on;
+fill([normalizedTime, fliplr(normalizedTime)], ...
+     [meanTorquesSumAcrossFlies(2, :) + stdTorquesSumAcrossFlies(2, :), ...
+      fliplr(meanTorquesSumAcrossFlies(2, :) - stdTorquesSumAcrossFlies(2, :))], ...
+     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded region
+plot(normalizedTime, meanTorquesSumAcrossFlies(2, :), 'k', 'LineWidth', 2); % Mean line
+plot(normalizedTime, mean(meanTorquesLHAllFlies(2, :, :), 3), 'r', 'LineWidth', 1.5); % LH line
+plot(normalizedTime, mean(meanTorquesRHAllFlies(2, :, :), 3), 'b', 'LineWidth', 1.5); % RH line
+title('Roll Torque');
+ylabel('Torque (Nm)');
+ylim([-5*10^-8 5*10^-8])
+
+% Forces (X-Component)
+subplot(3, 2, 5);
+hold on;
+fill([normalizedTime, fliplr(normalizedTime)], ...
+     [meanForcesSumAcrossFlies(1, :) + stdForcesSumAcrossFlies(1, :), ...
+      fliplr(meanForcesSumAcrossFlies(1, :) - stdForcesSumAcrossFlies(1, :))], ...
+     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded region
+plot(normalizedTime, meanForcesSumAcrossFlies(1, :), 'k', 'LineWidth', 2); % Mean line
+plot(normalizedTime, mean(meanForcesLHAllFlies(1, :, :), 3), 'r', 'LineWidth', 1.5); % LH line
+plot(normalizedTime, mean(meanForcesRHAllFlies(1, :, :), 3), 'b', 'LineWidth', 1.5); % RH line
+title('Sideward Force');
+ylabel('Force (N)');
+xlabel('Stroke Cycle');
+ylim([-5*10^-5 5*10^-5])
+
+% Torques (X-Component)
+subplot(3, 2, 6);
+hold on;
+fill([normalizedTime, fliplr(normalizedTime)], ...
+     [meanTorquesSumAcrossFlies(1, :) + stdTorquesSumAcrossFlies(1, :), ...
+      fliplr(meanTorquesSumAcrossFlies(1, :) - stdTorquesSumAcrossFlies(1, :))], ...
+     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded region
+plot(normalizedTime, meanTorquesSumAcrossFlies(1, :), 'k', 'LineWidth', 2); % Mean line
+plot(normalizedTime, mean(meanTorquesLHAllFlies(1, :, :), 3), 'r', 'LineWidth', 1.5); % LH line
+plot(normalizedTime, mean(meanTorquesRHAllFlies(1, :, :), 3), 'b', 'LineWidth', 1.5); % RH line
 title('Pitch Torque');
 ylabel('Torque (Nm)');
 xlabel('Stroke Cycle');
+ylim([-5*10^-8 5*10^-8])
 
-sgtitle('Forces and Torques with Variability Across Multiple Flies');
+sgtitle('Forces and Torques with Variability Across Multiple Flies: Post-cut');

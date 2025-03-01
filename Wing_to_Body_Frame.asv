@@ -1,0 +1,92 @@
+function Dynamics_Body = Wing_to_Body_Frame(Kinematics, Dynamics_Body, Dynamics_Wing, Morphology)
+    %% Preamble
+    % Rotates aerodynamic force and torque vectors from the wing frame into the body frame.
+    % This function applies a rotation transformation to align wing forces and torques with 
+    % the body coordinate system.
+    %
+    % Inputs:
+    %   Kinematics      - Structure containing wing kinematic properties
+    %   Dynamics_Body   - Structure containing body frame force and torque data
+    %   Dynamics_Wing   - Structure containing wing frame force and torque data
+    %   Morphology      - Structure containing morphological properties
+    %
+    % Outputs:
+    %   Dynamics_Body    - Updated structure with transformed force and torque values
+
+    %% 1. Precomputations
+    % Required Kinematic Parameters
+    N       = Kinematics.N;
+    R_wb    = Kinematics.R_wb;
+
+    % Required Morpholgy Parameters
+    Wing_Plane_angle = Morphology.Wing_Plane_angle;
+
+    % Required Dynamics Paramters
+    Force_Lift              = Dynamics_Wing.Force_Lift;
+    Force_Drag              = Dynamics_Wing.Force_Drag;
+    Force_Rotation          = Dynamics_Wing.Force_Rotation;
+    Force_AM                = Dynamics_Wing.Force_AM;
+    Torque_Lift             = Dynamics_Wing.Torque_Lift;
+    Torque_Drag             = Dynamics_Wing.Torque_Drag;
+    Torque_Rotation         = Dynamics_Wing.Torque_Rotation;
+    Torque_AM               = Dynamics_Wing.Torque_AM;
+    Torque_Inertia          = Dynamics_Wing.Torque_Inertia;
+    Torque_Due_to_Forces    = Dynamics_Body.Torque_Due_to_Forces;
+
+    %% 2. Transform Forces and Torques to Body Frame
+    % Loop through each time step to rotate forces and torques
+    for i = 1:N
+        % Rotation matrix for wing frame to body frame
+        Rot_mat = R_wb(:, :, i);
+
+        % Rotation matrix for wing stroke plane correction
+        Rot_wing_plane = rotx(deg2rad(Wing_Plane_angle));
+
+        % Apply transformations to aerodynamic forces
+        Force_Lift(:, i)        = Rot_wing_plane * Rot_mat * Force_Lift(:, i);
+        Force_Drag(:, i)        = Rot_wing_plane * Rot_mat * Force_Drag(:, i);
+        Force_Rotation(:, i)    = Rot_wing_plane * Rot_mat * Force_Rotation(:, i);
+        Force_AM(:, i)          = Rot_wing_plane * Rot_mat * Force_AM(:, i);
+
+        % Apply transformations to aerodynamic torques
+        Torque_Lift(:, i)       = Rot_wing_plane * Rot_mat * Torque_Lift(:, i);
+        Torque_Drag(:, i)       = Rot_wing_plane * Rot_mat * Torque_Drag(:, i);
+        Torque_Rotation(:, i)   = Rot_wing_plane * Rot_mat * Torque_Rotation(:, i);
+        Torque_AM(:, i)         = Rot_wing_plane * Rot_mat * Torque_AM(:, i);
+        Torque_Inertia(:, i)    = Rot_wing_plane * Rot_mat * Torque_Inertia(:, i);
+    end
+
+    %% 3. Apply Low-Pass Filtering
+    %Butterworth filter to smooth  data
+
+    [b, a] = butter(2, 0.25, 'low'); % 2nd-order Butterworth filter
+    for j = 1:3
+        Force_Lift(j, :)            = filtfilt(b, a, Force_Lift(j, :));
+        Force_Drag(j, :)            = filtfilt(b, a, Force_Drag(j, :));
+        Force_Rotation(j, :)        = filtfilt(b, a, Force_Rotation(j, :));
+        Force_AM(j, :)              = filtfilt(b, a, Force_AM(j, :));
+        Torque_Lift(j, :)           = filtfilt(b, a, Torque_Lift(j, :));
+        Torque_Drag(j, :)           = filtfilt(b, a, Torque_Drag(j, :));
+        Torque_Rotation(j, :)       = filtfilt(b, a, Torque_Rotation(j, :));
+        Torque_AM(j, :)             = filtfilt(b, a, Torque_AM(j, :));
+        Torque_Inertia(j, :)        = filtfilt(b, a, Torque_Inertia(j, :));
+        Torque_Due_to_Forces(j, :)  = filtfilt(b, a, Torque_Due_to_Forces(j, :));
+    end
+
+    %% 4. Store Transformed Forces and Torques in Body Frame
+    Dynamics_Body.Force_Lift            = Force_Lift;
+    Dynamics_Body.Force_Drag            = Force_Drag;
+    Dynamics_Body.Force_Rotation        = Force_Rotation;
+    Dynamics_Body.Force_AM              = Force_AM;
+    Dynamics_Body.Torque_Lift           = Torque_Lift;
+    Dynamics_Body.Torque_Drag           = Torque_Drag;
+    Dynamics_Body.Torque_AM             = Torque_AM;
+    Dynamics_Body.Torque_Rotation       = Torque_Rotation;
+    Dynamics_Body.Torque_Inertia        = Torque_Inertia;
+    Dynamics_Body.Torque_Due_to_Forces  = Torque_Due_to_Forces;
+
+    % Compute and store total forces and torques in the body frame
+    Dynamics_Body.Force_Total  = Force_Lift  + Force_Drag  + Force_Rotation  + Force_AM;
+    Dynamics_Body.Torque_Total = Torque_Lift + Torque_Drag + Torque_Rotation + Torque_AM + Torque_Inertia + Torque_Due_to_Forces;
+
+end

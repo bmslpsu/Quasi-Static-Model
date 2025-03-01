@@ -20,7 +20,7 @@ function [Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Joint] = wingPlotGUI(Wing_Sh
 
     % Initial plot
     [~, ~, ~, ~, ~, ~, lhWingLength_Max, lhChordLength_Max, rhWingLength_Max, rhChordLength_Max] = Standard_Wing(0, 0, 100, 100, 0, 0, 100, 100);
-  
+ 
     
     % Create a panel for the input fields
     inputPanel = uipanel(grid, 'Title', 'Inputs');

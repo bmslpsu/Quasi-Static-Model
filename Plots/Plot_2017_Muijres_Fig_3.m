@@ -55,11 +55,11 @@ for i = 1:length(unique_S2)
 end
 
 % Scatter all individual points
-scatter(unique_S2, mean_force_x_means, 'MarkerEdgeColor', [1, 0.5, 0])
-scatter(unique_S2, mean_force_y_means, 'MarkerEdgeColor', "g")
+scatter(unique_S2, mean_force_x_means, 'MarkerEdgeColor', "g")
+scatter(unique_S2, mean_force_y_means, 'MarkerEdgeColor', [1, 0.5, 0])
 scatter(unique_S2, mean_force_z_means, 'MarkerEdgeColor', "b")
 
-% 2017 Data
+% % 2017 Data
 % scatter(Damage_chord_Position, Force_Damage_chord_x, 'd', 'MarkerEdgeColor', [1, 0.5, 0], 'MarkerFaceColor', [1, 0.5, 0]);
 % scatter(Damage_chord_Position, Force_Damage_chord_y, 'd', 'MarkerEdgeColor', 'g', 'MarkerFaceColor', 'g');
 % scatter(Damage_chord_Position, Force_Damage_chord_z, 'd', 'MarkerEdgeColor', 'b', 'MarkerFaceColor', 'b');
@@ -80,8 +80,8 @@ Y_fit = polyval(py, unique_S2);
 Z_fit = polyval(pz, unique_S2);
 
 % Plot the fitted lines
-plot(unique_S2, X_fit, 'Color', [1, 0.5, 0])
-plot(unique_S2, Y_fit, 'Color', "g")
+plot(unique_S2, X_fit, 'Color', "g")
+plot(unique_S2, Y_fit, 'Color', [1, 0.5, 0])
 plot(unique_S2, Z_fit, 'Color', "b")
 
 % Labels and legend
