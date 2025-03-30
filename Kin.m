@@ -71,6 +71,7 @@ function Kinematics = Kin(Rotation, Stroke, Deviation, rad_or_deg, dt)
     % Preallocate angular velocity and acceleration
     omega = zeros(3, N);
     alpha = zeros(3, N);
+    AoA   = zeros(3, N);
 
     % Compute angular velocity and acceleration in the body frame
     for i = 1:N

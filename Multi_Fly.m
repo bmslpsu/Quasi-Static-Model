@@ -8,148 +8,116 @@ warning off
 %% Runtime
 current_time = datetime;
 
-%% Wing Values
-Wing_damage_LH = 100;
-Wing_damage_RH = 100;
-
-filePath = 'C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Experimental Data\wing_area_ratio.mat';
-load(filePath); % Load the MAT file
-
-filePath = 'C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Experimental Data\Wing_Stroke_Angle\Wing_Stroke_Plane.mat';
-load(filePath); % Load the MAT file
-
-filePath = 'C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Experimental Data\damage_side.mat';
-load(filePath); % Load the MAT file
-
-
 %% Fly Numbers
-% Specify the folder path
-folderPath = 'C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Experimental Data\Fly_data\Fly_data';
+% Get a list of all items in 'Data_Sets'
+allItems = dir(fullfile('Data_Sets'));
 
-% Get a list of all files and folders in the specified folder
-allItems = dir(folderPath);
-
-% Extract only the folder names
-folderNames = {allItems([allItems.isdir]).name};
-
-% Remove '.' and '..' entries
+% Keep only folders and remove '.' and '..'
+isFolder = [allItems.isdir];
+folderNames = {allItems(isFolder).name};
 folderNames = folderNames(~ismember(folderNames, {'.', '..'}));
 
-% Extract numbers from folder names
-numbers = cellfun(@(x) regexp(x, '\d+', 'match'), folderNames, 'UniformOutput', false);
+% Keep only folders matching pattern 'Fly_' followed by digits
+flyFolderMask = ~cellfun(@isempty, regexp(folderNames, '^fly_\d+$', 'once'));
+flyFolders = folderNames(flyFolderMask);
 
-% Convert cell array to numeric array, if the extracted numbers are numeric
-Fly_Numbers = cellfun(@(x) str2double(x), [numbers{:}]);
+% Extract numeric part from folder names (e.g., 'Fly_00001' -> 1)
+Fly_Numbers = cellfun(@(x) str2double(regexp(x, '\d+', 'match', 'once')), flyFolders);
 
 
-total_states = 0;
+%%
 fly_count = 1;
 for i=1:length(Fly_Numbers)
     disp(Fly_Numbers(i))
-    %% Load Data
-    load(['Data_Sets' filesep 'fly_' num2str(Fly_Numbers(i)) filesep 'angles' filesep 'wing_data.mat']);
+    % Load Data
+    Data_Set_Selector = ['fly_' num2str(Fly_Numbers(i))];
+
+    load(['Data_Sets' filesep Data_Set_Selector filesep 'Inputs' filesep 'Kinematics.mat']);
+    load(['Data_Sets' filesep Data_Set_Selector filesep 'Inputs' filesep 'Fly_Data.mat']);
 
 
+    % Kinematics Length
+    Kin_Length = length(FilteredAngleL(:,1));
 
     % Find each period via peak
     [peaks, peakIndices] = findpeaks(FilteredAngleL(:,1));
 
-    Pre_cut = 1:200;
-    Post_cut = 201:600;
-    Steady_State = 601:length(FilteredAngleL(:,1));
-
-    if length(FilteredAngleL(:,1)) > 605
-        states = 3;
-    else
-        states = 2;
-    end
-
-    for k=1:states
-        if k ==1
-            Period = Pre_cut;
-            period_text = 'Pre Cut';
-            Wing_damage_LH = 100;
-            Wing_damage_RH = 100;
-            index = find(Wing_Stroke_Plane.Fly == Fly_Numbers(i));
-            ang_wing_plane_LH = Wing_Stroke_Plane.LH_Pre(index);
-            ang_wing_plane_RH = Wing_Stroke_Plane.RH_Pre(index);
-            Kinematics_LH = FilteredAngleL;
-            Kinematics_RH = FilteredAngleR;
-        elseif k==2
-            Period = Post_cut;
-            period_text = 'Post Cut';
-            index = find(Wing_Stroke_Plane.Fly == Fly_Numbers(i));
-            if sum(ismember(left_damage_list, Fly_Numbers(i)))==1
-                Kinematics_LH = FilteredAngleL;
-                Kinematics_RH = FilteredAngleR;
-                ang_wing_plane_LH = Wing_Stroke_Plane.LH_Post(index);
-                ang_wing_plane_RH = Wing_Stroke_Plane.RH_Post(index);
-                Wing_damage_LH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
-                Wing_damage_RH = 100;
-            else
-                Kinematics_LH = FilteredAngleR;
-                Kinematics_RH = FilteredAngleL;
-                ang_wing_plane_LH = Wing_Stroke_Plane.RH_Post(index);
-                ang_wing_plane_RH = Wing_Stroke_Plane.LH_Post(index);
-                Wing_damage_LH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
-                Wing_damage_RH = 100;
+    for k=1:3
+        try
+            %Flip RH to LH data
+            if Fly_Data.Chord_Cut_RH(k) < 100 || Fly_Data.Span_Cut_RH(k) < 100
+                [Fly_Data.Chord_Cut_LH(k),        Fly_Data.Chord_Cut_RH(k)]        = deal(Fly_Data.Chord_Cut_RH(k),        Fly_Data.Chord_Cut_LH(k));
+                [Fly_Data.Span_Cut_LH(k),         Fly_Data.Span_Cut_RH(k)]         = deal(Fly_Data.Span_Cut_RH(k),         Fly_Data.Span_Cut_LH(k));
+                [Fly_Data.Stroke_Amplitude_LH(k), Fly_Data.Stroke_Amplitude_RH(k)] = deal(Fly_Data.Stroke_Amplitude_RH(k), Fly_Data.Stroke_Amplitude_LH(k));
+                [Fly_Data.Wing_Plane_Angle_LH(k), Fly_Data.Wing_Plane_Angle_RH(k)] = deal(Fly_Data.Wing_Plane_Angle_RH(k), Fly_Data.Wing_Plane_Angle_LH(k));
+                [FilteredAngleL,                  FilteredAngleR]                  = deal(FilteredAngleR,                  FilteredAngleL);
             end
-            total_states = total_states + 1;
-        else
-            Period = Steady_State;
-            period_text = 'Steady State';
-            index = find(Wing_Stroke_Plane.Fly == Fly_Numbers(i));
-            if sum(ismember(left_damage_list, Fly_Numbers(i)))==1
-                Kinematics_LH = FilteredAngleL;
-                Kinematics_RH = FilteredAngleR;
-                ang_wing_plane_LH = Wing_Stroke_Plane.LH_Post(index);
-                ang_wing_plane_RH = Wing_Stroke_Plane.RH_Post(index);
-                Wing_damage_LH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
-                Wing_damage_RH = 100;
+
+            % Cut kinematics for each time period
+            if k==1
+                Time = 1:200; %Time of simulation before wing cut
+                period_text = 'Pre Cut';
+            elseif k==2
+                Time = 201:600; %Time of simulation after wing cut prior to steady state
+                period_text = 'Post Cut';
             else
-                Kinematics_LH = FilteredAngleR;
-                Kinematics_RH = FilteredAngleL;
-                ang_wing_plane_LH = Wing_Stroke_Plane.RH_Post(index);
-                ang_wing_plane_RH = Wing_Stroke_Plane.LH_Post(index);
-                Wing_damage_LH = str2double(strrep(wing_area_ratio.(['fly' num2str(Fly_Numbers(i))]), '%', ''));
-                Wing_damage_RH = 100;
+                Time = 601:Kin_Length; %Time of simulation after steady state occurs
+                period_text = 'Steady State';
             end
-            total_states = total_states + 1;
+
+            Kinematics_LH = FilteredAngleL(Time,:);
+            Kinematics_RH = FilteredAngleR(Time,:);
+
+            % Time stamps are indexs and need converted to time domain based on the
+            % frame rate
+            Frame_Rate = 8000;
+            dt = 1/Frame_Rate;
+
+            %% Run Simulation
+            Fly_Master(fly_count).Fly  = Analysis(Fly_Data.Chord_Cut_LH(k), Fly_Data.Span_Cut_LH(k), Fly_Data.Chord_Cut_RH(k), Fly_Data.Span_Cut_RH(k), ...
+                        Fly_Data.Stroke_Amplitude_LH(k), Fly_Data.Stroke_Amplitude_RH(k), Fly_Data.Wing_Plane_Angle_LH(k), Fly_Data.Wing_Plane_Angle_RH(k), ...
+                        Fly_Data.Body_Angle(k), Kinematics_LH, Kinematics_RH, Time, dt, false);
+
+
+            Fly_Master(fly_count).Chord_Cut_LH          = Fly_Data.Chord_Cut_LH(k);
+            Fly_Master(fly_count).Span_Cut_LH           = Fly_Data.Span_Cut_LH(k);
+            Fly_Master(fly_count).Chord_Cut_RH          = Fly_Data.Chord_Cut_RH(k);
+            Fly_Master(fly_count).Span_Cut_RH           = Fly_Data.Span_Cut_RH(k);
+            Fly_Master(fly_count).Wing_Plane_Angle_LH   = Fly_Data.Wing_Plane_Angle_LH(k);
+            Fly_Master(fly_count).Wing_Plane_Angle_RH   = Fly_Data.Wing_Plane_Angle_RH(k);
+            Fly_Master(fly_count).Stroke_Amplitude_LH   = Fly_Data.Stroke_Amplitude_LH(k);
+            Fly_Master(fly_count).Stroke_Amplitude_RH   = Fly_Data.Stroke_Amplitude_RH(k);
+
+            Fly_Master(fly_count).Fly_Num               = Fly_Numbers(i);
+            Fly_Master(fly_count).State                 = period_text;
+
+            fly_count = fly_count +1;
+
         end
-
-        %% Run Simulation
-        % This section sets the time scale up and the kinematics to one period
-        % Period = peakIndices(1):peakIndices(end);
-        time = Period;
-
-        Fly_Master(fly_count).Fly  = Analysis_Fly(Wing_damage_LH, Wing_damage_RH, 100, 100,100,100, i, Kinematics_LH, Kinematics_RH, time, ang_wing_plane_LH, ang_wing_plane_RH);
-        Fly_Master(fly_count).chord_cut_LH = Wing_damage_LH;
-        Fly_Master(fly_count).chord_cut_RH = Wing_damage_RH;
-        Fly_Master(fly_count).span_cut_LH = 100;
-        Fly_Master(fly_count).span_cut_RH = 100;
-        Fly_Master(fly_count).Stroke_Amplitude_LH = 100;
-        Fly_Master(fly_count).Stroke_Amplitude_RH = 100;
-        Fly_Master(fly_count).Period = Period;
-        Fly_Master(fly_count).Fly_Num = Fly_Numbers(i);
-        Fly_Master(fly_count).State = period_text;
-
-        fly_count = fly_count +1;
-
     end
+
+    %% Save data
+    % Get entries just created in this fly loop
+    FlyIndices = find([Fly_Master.Fly_Num] == Fly_Numbers(i));
+
+    % Save them as a struct array
+    Fly = Fly_Master(FlyIndices);
+
+    % Construct output folder path for this fly
+    outputFolder = fullfile('Data_Sets', ['fly_' num2str(Fly_Numbers(i))], 'Outputs');
+
+    % Create the folder if it doesn't exist
+    if ~exist(outputFolder, 'dir')
+        mkdir(outputFolder);
+    end
+
+    % Save the Fly struct (this fly's 3 entries)
+    save(fullfile(outputFolder, 'Fly_Master.mat'), 'Fly');
 
 end
 
 %% Run Time End
 Duration = datetime-current_time
-
-%% Save data
-
-% % Define the fly folder path
-% flyFolderPath = fullfile('C:\Users\jacob\OneDrive - The Pennsylvania State University\Research\Progress Reports\2024.11.28 Meeting');
-% 
-% % Save your fly data to the Forces folder
-% save(fullfile(flyFolderPath, 'Fly.mat'), 'Fly_Master');
-% return
 
 %% Force means
 
