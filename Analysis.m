@@ -51,14 +51,14 @@ Morphology.Wing_RH.Wing_Plane_angle = Wing_Plane_angle_RH;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Time Set Up
-Fly.time = period;
+Fly.time = [0:dt:dt*(period-1)];
 
 %% Kinematic data
 Kinematics.LH = Kin(FilteredAngleL(:,2), FilteredAngleL(:,1).*LH_Stroke_Amplitude/100, FilteredAngleL(:,3), 0, dt);
 Kinematics.RH = Kin(FilteredAngleR(:,2), FilteredAngleR(:,1).*RH_Stroke_Amplitude/100, FilteredAngleR(:,3), 0, dt);
 
-Kinematics.LH.N = length(period);
-Kinematics.RH.N = length(period);
+Kinematics.LH.N = period;
+Kinematics.RH.N = period;
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find the Location of the Center of Pressure for each Wing Element

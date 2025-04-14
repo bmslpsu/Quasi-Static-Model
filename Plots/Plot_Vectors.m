@@ -1,264 +1,193 @@
-% Vector Plots
+%% Preamble
+% Vector plots comparing force and torque before and after wing damage
+% Jacob Taylor
+% Updated to include interactive fly selection and enhanced legend explanations
 
-%% Mean vector plot - Force
-% Define the origin for each vector (set to [0, 0, 0])
-originX = 0; % X-coordinates of the origin
-originY = 0; % Y-coordinates of the origin
-originZ = 0; % Z-coordinates of the origin
 
-% Custom distinct colors (manually chosen for high contrast)
-colors = [...
-    0.85, 0.33, 0.10; % Red-orange
-    0.47, 0.67, 0.19; % Green
-    0.30, 0.75, 0.93; % Light blue
-    0.93, 0.69, 0.13; % Yellow-orange
-    0.64, 0.08, 0.18; % Maroon
-    0.49, 0.18, 0.56; % Purple
-    0.00, 0.45, 0.74; % Blue
-    0.25, 0.25, 0.25; % Gray
-    0.94, 0.39, 0.39; % Salmon
-    0.10, 0.60, 0.40]; % Teal
+%% Step 1: Clear and Setup
+clc            % Clear command window
+warning off    % Suppress all warnings
+% close all    % Uncomment to close any open figures
 
-num_colors = size(colors, 1); % Number of available colors
-
-% Initialize handles and legend labels for "Pre Cut" only
-h_pre = []; % Handles for "Pre Cut"
-legend_labels_pre = {}; % Labels for "Pre Cut"
-
-% 3D Vector Plot
-figure;
-hold on;
-i = 1; % Color index
-
-meanX_pre = [];
-meanY_pre = [];
-meanZ_pre = [];
-meanX_post = [];
-meanY_post = [];
-meanZ_post = [];
+% Snapshot of variables that existed before the script
+vars_before = who;
 
 
 
+%% Step 2: Fly Selection (based only on unique Fly_Num)
+% Get unique Fly_Nums
+allFlyNums = [Fly_Master.Fly_Num];
+uniqueFlyNums = unique(allFlyNums);
+
+% Create selection list with just Fly numbers
+flyListStr = arrayfun(@(n) sprintf("Fly #%d", n), uniqueFlyNums, 'UniformOutput', false);
+
+[selectedIdx, ok] = listdlg( ...
+    'PromptString', 'Select flies to include in vector analysis:', ...
+    'ListString', flyListStr, ...
+    'SelectionMode', 'multiple', ...
+    'ListSize', [300 300], ...
+    'Name', 'Fly Selector');
+
+if ~ok || isempty(selectedIdx)
+    disp('No selection made. Aborting...');
+    return;
+end
+
+selectedFlyNums = uniqueFlyNums(selectedIdx); % Vector of selected Fly_Num
+
+%% Step 3: Compute Mean Forces and Torques for All Flies
+for i = 1:length(Fly_Master)
+    S_2_Ratio(i) = Fly_Master(i).Fly.Morphology.total.S_2_Ratio;
+    Force_X_mean(i) = (mean(Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Force_Total(1,:)) + ...
+                       mean(Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Force_Total(1,:))) / ...
+                       Fly_Master(i).Fly.Morphology.total.weight;
+    Force_Y_mean(i) = -(mean(Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Force_Total(2,:)) + ...
+                        mean(Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Force_Total(2,:))) / ...
+                        Fly_Master(i).Fly.Morphology.total.weight;
+    Force_Z_mean(i) = (mean(Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Force_Total(3,:)) + ...
+                       mean(Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Force_Total(3,:))) / ...
+                       Fly_Master(i).Fly.Morphology.total.weight;
+
+    avgWingLength = (Fly_Master(i).Fly.Morphology.Wing_LH.wing_length + ...
+                     Fly_Master(i).Fly.Morphology.Wing_RH.wing_length) / 2;
+    normalization = Fly_Master(i).Fly.Morphology.total.weight * avgWingLength;
+
+    Moment_Pitch_mean(i) = -mean((Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Torque_Total(1,:) + ...
+                                  Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Torque_Total(1,:)) / normalization);
+    Moment_Roll_mean(i)  =  mean((Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Torque_Total(2,:) + ...
+                                  Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Torque_Total(2,:)) / normalization);
+    Moment_Yaw_mean(i)   = -mean((Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Torque_Total(3,:) + ...
+                                  Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Torque_Total(3,:)) / normalization);
+end
+
+%% Step 4: Force Vector Plot (from origin)
+figure; hold on;
+originX = 0; originY = 0; originZ = 0;
+
+colors = lines(10);
+num_colors = size(colors, 1);
+
+h_pre = [];
+legend_labels_pre = {};
+meanX_pre = []; meanY_pre = []; meanZ_pre = [];
+meanX_post = []; meanY_post = []; meanZ_post = [];
+
+i = 1;
 for k = 1:length(Fly_Master)
-    %if Fly_Master(k).Fly_Num == 23 || Fly_Master(k).Fly_Num == 24 || Fly_Master(k).Fly_Num == 5
-        % Ensure the color index wraps around if there are more than num_colors flies
-        color_idx = mod(i-1, num_colors) + 1; % Cycles through 1 to num_colors
+    if ismember(Fly_Master(k).Fly_Num, selectedFlyNums)
+        color_idx = mod(i-1, num_colors) + 1;
+        endX = Force_X_mean(k); endY = Force_Y_mean(k); endZ = Force_Z_mean(k);
 
-        % Calculate the endpoint of the vector
-        endX = Force_X_mean(k);
-        endY = Force_Y_mean(k);
-        endZ = Force_Z_mean(k);
-
-        if Fly_Master(k).State == "Pre Cut"
-            % Plot solid line for "Pre Cut"
+        if strcmpi(Fly_Master(k).Attributes, "Pre-Cut")
             h_pre(end+1) = plot3([originX, endX], [originY, endY], [originZ, endZ], ...
-                'Color', colors(color_idx, :), 'LineStyle', '-', ...
-                'LineWidth', 1.5);
-            % Add legend label for "Pre Cut"
+                'Color', colors(color_idx, :), 'LineStyle', '-', 'LineWidth', 1.5);
             legend_labels_pre{end+1} = ['Fly ' num2str(Fly_Master(k).Fly_Num)];
             meanX_pre(end+1) = endX;
             meanY_pre(end+1) = endY;
             meanZ_pre(end+1) = endZ;
-
-        elseif Fly_Master(k).State == "Post Cut"
-            % Plot dashed line for "Post Cut" without adding to the legend
+        elseif strcmpi(Fly_Master(k).Attributes, "Post-Cut")
             plot3([originX, endX], [originY, endY], [originZ, endZ], ...
-                'Color', colors(color_idx, :), 'LineStyle', '--', ...
-                'LineWidth', 1.5);
-            i = i + 1; % Increment color index
+                'Color', colors(color_idx, :), 'LineStyle', '--', 'LineWidth', 1.5);
             meanX_post(end+1) = endX;
             meanY_post(end+1) = endY;
             meanZ_post(end+1) = endZ;
-
-
-            % elseif Fly_Master(k).State == "Steady State"
-            %     % Plot dotted line for "Steady State" without adding to the legend
-            %     plot3([originX(k), endX], [originY(k), endY], [originZ(k), endZ], ...
-            %         'Color', colors(color_idx, :), 'LineStyle', ':', ...
-            %         'LineWidth', 1.5);
-            %     i = i + 1; % Increment color index
+            i = i + 1;
         end
-    %end
-        
+    end
 end
 
+% Mean vector
+h_pre(end+1) = plot3([originX, mean(meanX_pre)], [originY, mean(meanY_pre)], [originZ, mean(meanZ_pre)], ...
+    'k-', 'LineWidth', 1.5);
+legend_labels_pre{end+1} = 'Mean Pre-Cut';
 
-        h_pre(end+1) = plot3([originX, mean(meanX_pre)], [originY, mean(meanY_pre)], [originZ, mean(meanZ_pre)], ...
-            'Color', 'k', 'LineStyle', '-', ...
-            'LineWidth', 1.5);
-        % Add legend label for "Pre Cut"
-        legend_labels_pre{end+1} = 'mean';
+plot3([originX, mean(meanX_post)], [originY, mean(meanY_post)], [originZ, mean(meanZ_post)], ...
+    'k--', 'LineWidth', 1.5);
 
-        plot3([originX, mean(meanX_post)], [originY, mean(meanY_post)], [originZ, mean(meanZ_post)], ...
-                'Color', colors(color_idx, :), 'LineStyle', '--', ...
-                'LineWidth', 1.5);
+% Dummy handles for legend explanation
+h_legend_dummy_pre = plot3(NaN, NaN, NaN, 'k-',  'LineWidth', 1.5);
+h_legend_dummy_post = plot3(NaN, NaN, NaN, 'k--', 'LineWidth', 1.5);
 
+legend([h_pre, h_legend_dummy_pre, h_legend_dummy_post], ...
+       [legend_labels_pre, 'Pre-Cut (solid)', 'Post-Cut (dashed)'], ...
+       'Location', 'eastoutside');
 
-% Add title and axis labels
 xlabel('Sideward (F/mg)');
 ylabel('Forward (F/mg)');
 zlabel('Upward (F/mg)');
-axis equal;
-% grid on;
-view(3);
+view(3); axis equal; grid on;
+title('Force Vectors Before and After Cut');
 
+%% Step 6: Torque Vector Plot (from origin)
+figure; hold on;
+originX = 0; originY = 0; originZ = 0;
+h_pre = [];
+legend_labels_pre = {};
+meanX_pre = []; meanY_pre = []; meanZ_pre = [];
+meanX_post = []; meanY_post = []; meanZ_post = [];
 
-% % Set axis limits
-% xmax = max(Force_X_mean); % Maximum x value
-% zmax = max(Force_Z_mean); % Maximum z value
-xlim([0, .5]);
-zlim([-.75, 1]);
-% %ylim([0, 0.5])
-
-
-% Add legend for "Pre Cut" vectors
-legend(h_pre, legend_labels_pre, 'Location', 'best');
-
-
-%% Mean vector plot - Torque
-% Define the origin for each vector (set to [0, 0, 0])
-originX = 0; % X-coordinates of the origin
-originY = 0; % Y-coordinates of the origin
-originZ = 0; % Z-coordinates of the origin
-
-% Custom distinct colors (manually chosen for high contrast)
-colors = [...
-    0.85, 0.33, 0.10; % Red-orange
-    0.47, 0.67, 0.19; % Green
-    0.30, 0.75, 0.93; % Light blue
-    0.93, 0.69, 0.13; % Yellow-orange
-    0.64, 0.08, 0.18; % Maroon
-    0.49, 0.18, 0.56; % Purple
-    0.00, 0.45, 0.74; % Blue
-    0.25, 0.25, 0.25; % Gray
-    0.94, 0.39, 0.39; % Salmon
-    0.10, 0.60, 0.40]; % Teal
-
-num_colors = size(colors, 1); % Number of available colors
-
-% Initialize handles and legend labels for "Pre Cut" only
-h_pre = []; % Handles for "Pre Cut"
-legend_labels_pre = {}; % Labels for "Pre Cut"
-
-% 3D Vector Plot
-figure;
-hold on;
-i = 1; % Color index
-
-meanX_pre = [];
-meanY_pre = [];
-meanZ_pre = [];
-meanX_post = [];
-meanY_post = [];
-meanZ_post = [];
-
-
-
-
+i = 1;
 for k = 1:length(Fly_Master)
-    %if Fly_Master(k).Fly_Num == 23 || Fly_Master(k).Fly_Num == 24 || Fly_Master(k).Fly_Num == 5
-        % Ensure the color index wraps around if there are more than num_colors flies
-        color_idx = mod(i-1, num_colors) + 1; % Cycles through 1 to num_colors
+    if ismember(Fly_Master(k).Fly_Num, selectedFlyNums)
+        color_idx = mod(i-1, num_colors) + 1;
+        endX = Moment_Roll_mean(k); endY = Moment_Pitch_mean(k); endZ = Moment_Yaw_mean(k);
 
-        % Calculate the endpoint of the vector
-        endX = Moment_Roll_mean(k);
-        endY = Moment_Pitch_mean(k);
-        endZ = Moment_Yaw_mean(k);
-
-        if Fly_Master(k).State == "Pre Cut"
-            % Plot solid line for "Pre Cut"
+        if strcmpi(Fly_Master(k).Attributes, "Pre-Cut")
             h_pre(end+1) = plot3([originX, endX], [originY, endY], [originZ, endZ], ...
-                'Color', colors(color_idx, :), 'LineStyle', '-', ...
-                'LineWidth', 1.5);
-            % Add legend label for "Pre Cut"
+                'Color', colors(color_idx, :), 'LineStyle', '-', 'LineWidth', 1.5);
             legend_labels_pre{end+1} = ['Fly ' num2str(Fly_Master(k).Fly_Num)];
             meanX_pre(end+1) = endX;
             meanY_pre(end+1) = endY;
             meanZ_pre(end+1) = endZ;
-
-        elseif Fly_Master(k).State == "Post Cut"
-            % Plot dashed line for "Post Cut" without adding to the legend
+        elseif strcmpi(Fly_Master(k).Attributes, "Post-Cut")
             plot3([originX, endX], [originY, endY], [originZ, endZ], ...
-                'Color', colors(color_idx, :), 'LineStyle', '--', ...
-                'LineWidth', 1.5);
-            i = i + 1; % Increment color index
-
+                'Color', colors(color_idx, :), 'LineStyle', '--', 'LineWidth', 1.5);
             meanX_post(end+1) = endX;
             meanY_post(end+1) = endY;
             meanZ_post(end+1) = endZ;
-
-            % elseif Fly_Master(k).State == "Steady State"
-            %     % Plot dotted line for "Steady State" without adding to the legend
-            %     plot3([originX(k), endX], [originY(k), endY], [originZ(k), endZ], ...
-            %         'Color', colors(color_idx, :), 'LineStyle', ':', ...
-            %         'LineWidth', 1.5);
-            %     i = i + 1; % Increment color index
+            i = i + 1;
         end
-    %end
+    end
 end
 
-        h_pre(end+1) = plot3([originX, mean(meanX_pre)], [originY, mean(meanY_pre)], [originZ, mean(meanZ_pre)], ...
-            'Color', 'k', 'LineStyle', '-', ...
-            'LineWidth', 1.5);
-        % Add legend label for "Pre Cut"
-        legend_labels_pre{end+1} = 'mean';
+% Mean vector
+h_pre(end+1) = plot3([originX, mean(meanX_pre)], [originY, mean(meanY_pre)], [originZ, mean(meanZ_pre)], ...
+    'k-', 'LineWidth', 1.5);
+legend_labels_pre{end+1} = 'Mean';
 
-        plot3([originX, mean(meanX_post)], [originY, mean(meanY_post)], [originZ, mean(meanZ_post)], ...
-                'Color', colors(color_idx, :), 'LineStyle', '--', ...
-                'LineWidth', 1.5);
+plot3([originX, mean(meanX_post)], [originY, mean(meanY_post)], [originZ, mean(meanZ_post)], ...
+    'k--', 'LineWidth', 1.5);
 
+% Dummy handles for legend explanation
+h_legend_dummy_pre = plot3(NaN, NaN, NaN, 'k-',  'LineWidth', 1.5);
+h_legend_dummy_post = plot3(NaN, NaN, NaN, 'k--', 'LineWidth', 1.5);
 
+legend([h_pre, h_legend_dummy_pre, h_legend_dummy_post], ...
+       [legend_labels_pre, 'Pre-Cut (solid)', 'Post-Cut (dashed)'], ...
+       'Location', 'eastoutside');
 
-% Add title and axis labels
 xlabel('Roll (T/mgl)');
 ylabel('Pitch (T/mgl)');
 zlabel('Yaw (T/mgl)');
-%axis equal;
-% grid on;
-% view([0 0]);
-view(3);
+view(3); axis equal; grid on;
+title('Torque Vectors Before and After Cut');
 
+%% Step 7: Non-Origin Force Vector Plot (Pre-Cut to Post-Cut per Fly)
+figure;
+hold on;
 
-% % Set axis limits
-% xmax = max(Force_X_mean); % Maximum x value
-% zmax = max(Force_Z_mean); % Maximum z value
-%xlim([-1, 1]);
-%zlim([-5, 5]);
-%ylim([0, 2])
+% Define distinct colors
+colors = lines(10);
+num_colors = size(colors, 1);
 
-title ("Torque Vecotr before and after (- -) damage" )
-
-% Add legend for "Pre Cut" vectors
-if ~isempty(h_pre) % Only add legend if there are vectors
-    legend(h_pre, legend_labels_pre, 'Location', 'best');
-else
-    warning('No vectors were plotted, so no legend is displayed.');
-end
-
-%% Mean vector plot (Non-orgin) - Force
-% Custom distinct colors (manually chosen for high contrast)
-colors = [... 
-    0.85, 0.33, 0.10; % Red-orange
-    0.47, 0.67, 0.19; % Green
-    0.30, 0.75, 0.93; % Light blue
-    0.93, 0.69, 0.13; % Yellow-orange
-    0.64, 0.08, 0.18; % Maroon
-    0.49, 0.18, 0.56; % Purple
-    0.00, 0.45, 0.74; % Blue
-    0.25, 0.25, 0.25; % Gray
-    0.94, 0.39, 0.39; % Salmon
-    0.10, 0.60, 0.40]; % Teal
-
-num_colors = size(colors, 1); % Number of available colors
-
-% Initialize variables for origin and vector endpoints
+% Initialize storage
 originX = [];
 originY = [];
 originZ = [];
 endX = [];
 endY = [];
 endZ = [];
-vector_handles = [];
 legend_labels = {};
 
 meanX_pre = [];
@@ -268,118 +197,116 @@ meanX_post = [];
 meanY_post = [];
 meanZ_post = [];
 
-% Loop through the dataset and calculate vectors
-for k = 1:length(Fly_Master)
-    % if Fly_Master(k).Fly_Num == 23 || Fly_Master(k).Fly_Num == 24 || Fly_Master(k).Fly_Num == 5
-        % Find the matching Pre-Cut and Post-Cut states for the same Fly_Num
-        if Fly_Master(k).State == "Pre Cut"
-            % Find the corresponding Post-Cut state for the same Fly_Num
-            matchIdx = find([Fly_Master.Fly_Num] == Fly_Master(k).Fly_Num & ...
-                            strcmp({Fly_Master.State}, "Post Cut"), 1);
-            if ~isempty(matchIdx)
-                % Origin is the Pre-Cut force components
-                originX(end+1) = Force_X_mean(k);
-                originY(end+1) = Force_Y_mean(k);
-                originZ(end+1) = Force_Z_mean(k);
+% Start/stop point storage for dashed line
+startX = [];
+startY = [];
+startZ = [];
+stopX = [];
+stopY = [];
+stopZ = [];
 
-                meanX_pre(end+1) = Force_X_mean(k);
-                meanY_pre(end+1) = Force_Y_mean(k);
-                meanZ_pre(end+1) = Force_Z_mean(k);
+% Recompute Force_X_mean, Force_Y_mean, Force_Z_mean since they may have been cleared
+Force_X_mean = zeros(1, length(Fly_Master));
+Force_Y_mean = zeros(1, length(Fly_Master));
+Force_Z_mean = zeros(1, length(Fly_Master));
 
-                % End is the Post-Cut force components
-                endX(end+1) = Force_X_mean(matchIdx);
-                endY(end+1) = Force_Y_mean(matchIdx);
-                endZ(end+1) = Force_Z_mean(matchIdx);
-
-                meanX_post(end+1) = Force_X_mean(matchIdx);
-                meanY_post(end+1) = Force_Y_mean(matchIdx);
-                meanZ_post(end+1) = Force_Z_mean(matchIdx);
-
-                % Save legend label for this fly
-                legend_labels{end+1} = ['Fly ' num2str(Fly_Master(k).Fly_Num)];
-            end
-        end
-    % end
+for i = 1:length(Fly_Master)
+    Force_X_mean(i) = (mean(Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Force_Total(1,:)) + ...
+                       mean(Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Force_Total(1,:))) / ...
+                       Fly_Master(i).Fly.Morphology.total.weight;
+    Force_Y_mean(i) = -(mean(Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Force_Total(2,:)) + ...
+                        mean(Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Force_Total(2,:))) / ...
+                        Fly_Master(i).Fly.Morphology.total.weight;
+    Force_Z_mean(i) = (mean(Fly_Master(i).Fly.Dynamics.Frame_Body.LH.Force_Total(3,:)) + ...
+                       mean(Fly_Master(i).Fly.Dynamics.Frame_Body.RH.Force_Total(3,:))) / ...
+                       Fly_Master(i).Fly.Morphology.total.weight;
 end
 
-% 3D Vector Plot
-figure;
-hold on;
+% Loop through Fly_Master to find matching pre- and post-cut for selected flies
+for k = 1:length(Fly_Master)
+    flyNum_k = Fly_Master(k).Fly_Num;
 
-% Plot vectors
+    if ismember(flyNum_k, selectedFlyNums) && strcmpi(Fly_Master(k).Attributes, "Pre-Cut")
+        % Find corresponding Post-Cut entry
+        matchIdx = find([Fly_Master.Fly_Num] == flyNum_k & strcmpi(string({Fly_Master.Attributes}), "Post-Cut"), 1);
+        if ~isempty(matchIdx)
+            % Start point (Pre-Cut)
+            originX(end+1) = Force_X_mean(k);
+            originY(end+1) = Force_Y_mean(k);
+            originZ(end+1) = Force_Z_mean(k);
+
+            meanX_pre(end+1) = Force_X_mean(k);
+            meanY_pre(end+1) = Force_Y_mean(k);
+            meanZ_pre(end+1) = Force_Z_mean(k);
+
+            % End point (Post-Cut)
+            endX(end+1) = Force_X_mean(matchIdx);
+            endY(end+1) = Force_Y_mean(matchIdx);
+            endZ(end+1) = Force_Z_mean(matchIdx);
+
+            meanX_post(end+1) = Force_X_mean(matchIdx);
+            meanY_post(end+1) = Force_Y_mean(matchIdx);
+            meanZ_post(end+1) = Force_Z_mean(matchIdx);
+
+            % Start and stop point (redundant, but explicit for plot overlays)
+            startX(end+1) = Force_X_mean(k);
+            startY(end+1) = Force_Y_mean(k);
+            startZ(end+1) = Force_Z_mean(k);
+            stopX(end+1) = Force_X_mean(matchIdx);
+            stopY(end+1) = Force_Y_mean(matchIdx);
+            stopZ(end+1) = Force_Z_mean(matchIdx);
+
+            % Label
+            legend_labels{end+1} = sprintf('Fly %d', flyNum_k);
+        end
+    end
+end
+
+% Plot vectors from Pre-Cut to Post-Cut
+vector_handles = [];
 for i = 1:length(originX)
-    % Ensure the color index wraps around
     color_idx = mod(i-1, num_colors) + 1;
-
-    % Plot vector from Pre-Cut to Post-Cut
     vector_handles(end+1) = plot3([originX(i), endX(i)], [originY(i), endY(i)], [originZ(i), endZ(i)], ...
         'Color', colors(color_idx, :), 'LineWidth', 1.5);
 end
+
+% Plot mean vector
 vector_handles(end+1) = plot3([mean(meanX_pre), mean(meanX_post)], [mean(meanY_pre), mean(meanY_post)], [mean(meanZ_pre), mean(meanZ_post)], ...
-    'Color', 'k', 'LineWidth', 1.5);
+    'Color', 'k', 'LineWidth', 2);
 legend_labels{end+1} = 'Mean';
 
-% Plot markers and collect handles for legend
-h_pre_cut = scatter3(mean(meanX_pre), mean(meanY_pre), mean(meanZ_pre), 50, 'k', 'filled', 'o', ...
-    'DisplayName', 'Pre Cut (Dot)');
-h_post_cut = scatter3(mean(meanX_post), mean(meanY_post), mean(meanZ_post), 100, 'k', 'filled', '^', ...
-    'DisplayName', 'Post Cut (Triangle)');
+% Add markers
+h_pre = scatter3(startX, startY, startZ, 50, 'k', 'filled', 'o', 'DisplayName', 'Pre Cut (Dot)');
+h_post = scatter3(stopX, stopY, stopZ, 100, 'k', 'filled', '^', 'DisplayName', 'Post Cut (Triangle)');
+mean_pre = scatter3(mean(meanX_pre), mean(meanY_pre), mean(meanZ_pre), 50, 'k', 'filled', 'o');
+mean_post = scatter3(mean(meanX_post), mean(meanY_post), mean(meanZ_post), 50, 'k', 'filled', '^');
 
-% Plot markers for individual vectors
 for i = 1:length(originX)
-    % Ensure the color index wraps around
     color_idx = mod(i-1, num_colors) + 1;
-
-    % Plot solid dot at the start (Pre-Cut)
     scatter3(originX(i), originY(i), originZ(i), 50, colors(color_idx, :), 'filled', 'o');
-
-    % Plot solid triangle at the end (Post-Cut)
     scatter3(endX(i), endY(i), endZ(i), 100, colors(color_idx, :), 'filled', '^');
 end
 
-% Add title and axis labels
 xlabel('Sideward (F/mg)');
 ylabel('Forward (F/mg)');
 zlabel('Upward (F/mg)');
 grid on;
-
-% Adjust view and axis limits
-%view(3);
-%view([0 0]);
-%view([90, 0]); % View along the x-axis (yz-plane)
 view([0, 90]);
+title('Force Change Vectors (Pre-Cut to Post-Cut)');
 
-% Combine legend handles and labels
-legend_handles = [vector_handles, h_pre_cut, h_post_cut];
-legend_labels_combined = [legend_labels, "Pre Cut (Dot)", "Post Cut (Triangle)"];
+legend([vector_handles, h_pre, h_post], [legend_labels, 'Pre Cut (Dot)', 'Post Cut (Triangle)'], 'Location', 'eastoutside');
 
-% Add legend
-legend(legend_handles, legend_labels_combined, 'Location', 'eastoutside');
+%% Step 8: Non-Origin Torque Vector Plot (Pre-Cut to Post-Cut per Fly)
+figure;
+hold on;
 
-%% Mean vector plot (Non-orgin) - Torque
-% Custom distinct colors (manually chosen for high contrast)
-colors = [... 
-    0.85, 0.33, 0.10; % Red-orange
-    0.47, 0.67, 0.19; % Green
-    0.30, 0.75, 0.93; % Light blue
-    0.93, 0.69, 0.13; % Yellow-orange
-    0.64, 0.08, 0.18; % Maroon
-    0.49, 0.18, 0.56; % Purple
-    0.00, 0.45, 0.74; % Blue
-    0.25, 0.25, 0.25; % Gray
-    0.94, 0.39, 0.39; % Salmon
-    0.10, 0.60, 0.40]; % Teal
-
-num_colors = size(colors, 1); % Number of available colors
-
-% Initialize variables for origin and vector endpoints
+% Initialize storage
 originX = [];
 originY = [];
 originZ = [];
 endX = [];
 endY = [];
 endZ = [];
-vector_handles = [];
 legend_labels = {};
 
 meanX_pre = [];
@@ -389,92 +316,89 @@ meanX_post = [];
 meanY_post = [];
 meanZ_post = [];
 
-% Loop through the dataset and calculate vectors
+startX = [];
+startY = [];
+startZ = [];
+stopX = [];
+stopY = [];
+stopZ = [];
+
+% Loop through Fly_Master to find matching pre- and post-cut for selected flies
 for k = 1:length(Fly_Master)
-    % if Fly_Master(k).Fly_Num == 23 || Fly_Master(k).Fly_Num == 24 || Fly_Master(k).Fly_Num == 5
-        % Find the matching Pre-Cut and Post-Cut states for the same Fly_Num
-        if Fly_Master(k).State == "Pre Cut"
-            % Find the corresponding Post-Cut state for the same Fly_Num
-            matchIdx = find([Fly_Master.Fly_Num] == Fly_Master(k).Fly_Num & ...
-                            strcmp({Fly_Master.State}, "Post Cut"), 1);
-            if ~isempty(matchIdx)
-                % Origin is the Pre-Cut torque components
-                originX(end+1) = Moment_Roll_mean(k);
-                originY(end+1) = Moment_Pitch_mean(k);
-                originZ(end+1) = Moment_Yaw_mean(k);
+    flyNum_k = Fly_Master(k).Fly_Num;
 
-                meanX_pre(end+1) = Moment_Roll_mean(k);
-                meanY_pre(end+1) = Moment_Pitch_mean(k);
-                meanZ_pre(end+1) = Moment_Yaw_mean(k);
+    if ismember(flyNum_k, selectedFlyNums) && strcmpi(Fly_Master(k).Attributes, "Pre-Cut")
+        matchIdx = find([Fly_Master.Fly_Num] == flyNum_k & strcmpi(string({Fly_Master.Attributes}), "Post-Cut"), 1);
+        if ~isempty(matchIdx)
+            originX(end+1) = Moment_Roll_mean(k);
+            originY(end+1) = Moment_Pitch_mean(k);
+            originZ(end+1) = Moment_Yaw_mean(k);
 
-                % End is the Post-Cut torque components
-                endX(end+1) = Moment_Roll_mean(matchIdx);
-                endY(end+1) = Moment_Pitch_mean(matchIdx);
-                endZ(end+1) = Moment_Yaw_mean(matchIdx);
+            meanX_pre(end+1) = Moment_Roll_mean(k);
+            meanY_pre(end+1) = Moment_Pitch_mean(k);
+            meanZ_pre(end+1) = Moment_Yaw_mean(k);
 
-                meanX_post(end+1) = Moment_Roll_mean(matchIdx);
-                meanY_post(end+1) = Moment_Pitch_mean(matchIdx);
-                meanZ_post(end+1) = Moment_Yaw_mean(matchIdx);
+            endX(end+1) = Moment_Roll_mean(matchIdx);
+            endY(end+1) = Moment_Pitch_mean(matchIdx);
+            endZ(end+1) = Moment_Yaw_mean(matchIdx);
 
-                % Save legend label for this fly
-                legend_labels{end+1} = ['Fly ' num2str(Fly_Master(k).Fly_Num)];
-            end
+            meanX_post(end+1) = Moment_Roll_mean(matchIdx);
+            meanY_post(end+1) = Moment_Pitch_mean(matchIdx);
+            meanZ_post(end+1) = Moment_Yaw_mean(matchIdx);
+
+            startX(end+1) = Moment_Roll_mean(k);
+            startY(end+1) = Moment_Pitch_mean(k);
+            startZ(end+1) = Moment_Yaw_mean(k);
+            stopX(end+1) = Moment_Roll_mean(matchIdx);
+            stopY(end+1) = Moment_Pitch_mean(matchIdx);
+            stopZ(end+1) = Moment_Yaw_mean(matchIdx);
+
+            legend_labels{end+1} = sprintf('Fly %d', flyNum_k);
         end
-    % end
+    end
 end
 
-% 3D Vector Plot
-figure;
-hold on;
-
 % Plot vectors
+vector_handles = [];
 for i = 1:length(originX)
-    % Ensure the color index wraps around
     color_idx = mod(i-1, num_colors) + 1;
-
-    % Plot vector from Pre-Cut to Post-Cut
     vector_handles(end+1) = plot3([originX(i), endX(i)], [originY(i), endY(i)], [originZ(i), endZ(i)], ...
-                                   'Color', colors(color_idx, :), 'LineWidth', 1.5);
+        'Color', colors(color_idx, :), 'LineWidth', 1.5);
 end
 
 vector_handles(end+1) = plot3([mean(meanX_pre), mean(meanX_post)], [mean(meanY_pre), mean(meanY_post)], [mean(meanZ_pre), mean(meanZ_post)], ...
-    'Color', 'k', 'LineWidth', 1.5);
+    'Color', 'k', 'LineWidth', 2);
 legend_labels{end+1} = 'Mean';
 
-% Plot markers and collect handles for legend
-h_pre_cut = scatter3(mean(meanX_pre), mean(meanY_pre), mean(meanZ_pre), 50, 'k', 'filled', 'o', ...
-    'DisplayName', 'Pre Cut (Dot)');
-h_post_cut = scatter3(mean(meanX_post), mean(meanY_post), mean(meanZ_post), 100, 'k', 'filled', '^', ...
-    'DisplayName', 'Post Cut (Triangle)');
+h_pre = scatter3(startX, startY, startZ, 50, 'k', 'filled', 'o', 'DisplayName', 'Pre Cut (Dot)');
+h_post = scatter3(stopX, stopY, stopZ, 100, 'k', 'filled', '^', 'DisplayName', 'Post Cut (Triangle)');
+mean_pre = scatter3(mean(meanX_pre), mean(meanY_pre), mean(meanZ_pre), 50, 'k', 'filled', 'o');
+mean_post = scatter3(mean(meanX_post), mean(meanY_post), mean(meanZ_post), 50, 'k', 'filled', '^');
 
-% Plot markers for individual vectors
 for i = 1:length(originX)
-    % Ensure the color index wraps around
     color_idx = mod(i-1, num_colors) + 1;
-
-    % Plot solid dot at the start (Pre-Cut)
     scatter3(originX(i), originY(i), originZ(i), 50, colors(color_idx, :), 'filled', 'o');
-
-    % Plot solid triangle at the end (Post-Cut)
     scatter3(endX(i), endY(i), endZ(i), 100, colors(color_idx, :), 'filled', '^');
 end
 
-% Add title and axis labels
 xlabel('Roll (T/mgl)');
 ylabel('Pitch (T/mgl)');
 zlabel('Yaw (T/mgl)');
 grid on;
+view([0, 90]);
+title('Torque Change Vectors (Pre-Cut to Post-Cut)');
 
-% Adjust view and axis limits
-%view(3);
-view([0 0]);
-%view([90, 0]); % View along the x-axis (yz-plane)
-%view([0, 90]);
+legend([vector_handles, h_pre, h_post], [legend_labels, 'Pre Cut (Dot)', 'Post Cut (Triangle)'], 'Location', 'eastoutside');
 
-% Combine legend handles and labels
-legend_handles = [vector_handles, h_pre_cut, h_post_cut];
-legend_labels_combined = [legend_labels, "Pre Cut (Dot)", "Post Cut (Triangle)"];
+%% Step 9: Clear Created Variables
+% Get all current variables
+vars_after = who;
 
-% Add legend
-legend(legend_handles, legend_labels_combined, 'Location', 'eastoutside');
+% Determine which variables were added by the script
+vars_created = setdiff(vars_after, vars_before);
 
+% Clear only the variables created during script execution
+clear(vars_created{:});
+
+% Clear the temporary tracking variables too
+clear vars_after vars_created vars_before;

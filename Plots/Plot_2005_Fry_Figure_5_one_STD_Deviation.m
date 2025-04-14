@@ -1,192 +1,173 @@
-fly_num = [1, 3, 5, 8, 10, 13, 16, 18, 21, 24];
-%fly_num=fly_num+1;
+%% Preamble
+% Jacob Taylor
+% Filtered Forces and Torques - Mean ± STD Across Valid Flies
 
-units_force = 10^-6;
-units_torque = 10^-10;
+%% Step 1: Clear and Setup
+clc            % Clear command window
+warning off    % Suppress all warnings
+% close all    % Uncomment to close any open figures
 
-% Define storage for all flies' mean forces and torques
-numTimePoints = 100; % Fixed number of normalized time points
-meanForcesSumAllFlies = zeros(3, numTimePoints, length(fly_num)); % [x, y, z] x time x flies
-meanForcesLHAllFlies = zeros(3, numTimePoints, length(fly_num)); % LH forces
-meanForcesRHAllFlies = zeros(3, numTimePoints, length(fly_num)); % RH forces
-meanTorquesSumAllFlies = zeros(3, numTimePoints, length(fly_num)); % [x, y, z] x time x flies
-meanTorquesLHAllFlies = zeros(3, numTimePoints, length(fly_num)); % LH torques
-meanTorquesRHAllFlies = zeros(3, numTimePoints, length(fly_num)); % RH torques
+% Snapshot of variables that existed before the script
+vars_before = who;
 
-for flyIdx = 1:length(fly_num)
-    % Extract the phi, force, and torque data for the current fly
-    phi = Fly_Master(fly_num(flyIdx)).Fly.Kinematics.LH.phi;
-    force_lh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.LH.Force_Total * units_force;
-    force_rh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.RH.Force_Total * units_force;
-    torque_lh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.LH.Torque_Total * units_torque;
-    torque_rh = Fly_Master(fly_num(flyIdx)).Fly.Dynamics.Frame_Body.RH.Torque_Total * units_torque;
+%% Step 2: Fly Selection
+flyOptions = arrayfun(@(f) sprintf('Fly #%d - %s', f.Fly_Num, f.Attributes), ...
+                      Fly_Master, 'UniformOutput', false);
 
-    % Find Peaks and Validate
-    [peaks, peakIndices] = findpeaks(phi);
+[selectedIdx, ok] = listdlg( ...
+    'PromptString', 'Select flies for force/torque filtering:', ...
+    'ListString', flyOptions, ...
+    'SelectionMode', 'multiple', ...
+    'ListSize', [300, 300], ...
+    'Name', 'Fly Selection');
 
-    % Define storage for normalized forces and torques for this fly
-    normalizedForcesSum = zeros(3, numTimePoints, length(peakIndices) - 1);
-    normalizedForcesLH = zeros(3, numTimePoints, length(peakIndices) - 1);
-    normalizedForcesRH = zeros(3, numTimePoints, length(peakIndices) - 1);
-    normalizedTorquesSum = zeros(3, numTimePoints, length(peakIndices) - 1);
-    normalizedTorquesLH = zeros(3, numTimePoints, length(peakIndices) - 1);
-    normalizedTorquesRH = zeros(3, numTimePoints, length(peakIndices) - 1);
-
-    % Loop through each stroke cycle (between peaks)
-    for cycleIdx = 1:length(peakIndices) - 1
-        % Get the indices for the current stroke cycle
-        startIdx = peakIndices(cycleIdx);
-        endIdx = peakIndices(cycleIdx + 1);
-
-        % Extract force and torque data for this stroke cycle
-        forceCycleLH = force_lh(:, startIdx:endIdx);
-        forceCycleRH = force_rh(:, startIdx:endIdx);
-        forceCycleSum = forceCycleLH + forceCycleRH;
-
-        torqueCycleLH = torque_lh(:, startIdx:endIdx);
-        torqueCycleRH = torque_rh(:, startIdx:endIdx);
-        torqueCycleSum = torqueCycleLH + torqueCycleRH;
-
-        % Normalize the time to a fixed number of points (0 to 1)
-        normalizedTime = linspace(0, 1, numTimePoints);
-        forceCycleSum_norm = interp1(linspace(0, 1, size(forceCycleSum, 2)), forceCycleSum', normalizedTime, 'linear', 'extrap')';
-        forceCycleLH_norm = interp1(linspace(0, 1, size(forceCycleLH, 2)), forceCycleLH', normalizedTime, 'linear', 'extrap')';
-        forceCycleRH_norm = interp1(linspace(0, 1, size(forceCycleRH, 2)), forceCycleRH', normalizedTime, 'linear', 'extrap')';
-        torqueCycleSum_norm = interp1(linspace(0, 1, size(torqueCycleSum, 2)), torqueCycleSum', normalizedTime, 'linear', 'extrap')';
-        torqueCycleLH_norm = interp1(linspace(0, 1, size(torqueCycleLH, 2)), torqueCycleLH', normalizedTime, 'linear', 'extrap')';
-        torqueCycleRH_norm = interp1(linspace(0, 1, size(torqueCycleRH, 2)), torqueCycleRH', normalizedTime, 'linear', 'extrap')';
-
-        % Store normalized forces and torques for this cycle
-        normalizedForcesSum(:, :, cycleIdx) = forceCycleSum_norm;
-        normalizedForcesLH(:, :, cycleIdx) = forceCycleLH_norm;
-        normalizedForcesRH(:, :, cycleIdx) = forceCycleRH_norm;
-        normalizedTorquesSum(:, :, cycleIdx) = torqueCycleSum_norm;
-        normalizedTorquesLH(:, :, cycleIdx) = torqueCycleLH_norm;
-        normalizedTorquesRH(:, :, cycleIdx) = torqueCycleRH_norm;
-    end
-
-    % Calculate the mean forces and torques for this fly across all cycles
-    meanForcesSumAllFlies(:, :, flyIdx) = mean(normalizedForcesSum, 3);
-    meanForcesLHAllFlies(:, :, flyIdx) = mean(normalizedForcesLH, 3);
-    meanForcesRHAllFlies(:, :, flyIdx) = mean(normalizedForcesRH, 3);
-    meanTorquesSumAllFlies(:, :, flyIdx) = mean(normalizedTorquesSum, 3);
-    meanTorquesLHAllFlies(:, :, flyIdx) = mean(normalizedTorquesLH, 3);
-    meanTorquesRHAllFlies(:, :, flyIdx) = mean(normalizedTorquesRH, 3);
+if ~ok || isempty(selectedIdx)
+    disp('No flies selected. Aborting.');
+    return;
 end
 
-% Calculate the overall mean and standard deviation across all flies
-meanForcesSumAcrossFlies = mean(meanForcesSumAllFlies, 3);
-stdForcesSumAcrossFlies = std(meanForcesSumAllFlies, 0, 3);
-meanTorquesSumAcrossFlies = mean(meanTorquesSumAllFlies, 3);
-stdTorquesSumAcrossFlies = std(meanTorquesSumAllFlies, 0, 3);
+%% Step 3: Setup
+units_force  = 1e-6;
+units_torque = 1e-10;
+numTimePoints = 100;
+normalizedTime = linspace(0, 1, numTimePoints);
+numFlies = length(selectedIdx);
 
-% Apply the filter based on standard deviation
+% Allocate arrays
+meanForcesSumAllFlies   = zeros(3, numTimePoints, numFlies);
+meanTorquesSumAllFlies  = zeros(3, numTimePoints, numFlies);
+meanForcesLHAllFlies    = zeros(3, numTimePoints, numFlies);
+meanForcesRHAllFlies    = zeros(3, numTimePoints, numFlies);
+meanTorquesLHAllFlies   = zeros(3, numTimePoints, numFlies);
+meanTorquesRHAllFlies   = zeros(3, numTimePoints, numFlies);
+
+%% Step 4: Loop Over Flies
+for flyIdx = 1:numFlies
+    fly = Fly_Master(selectedIdx(flyIdx)).Fly;
+
+    phi = fly.Kinematics.LH.phi;
+    force_lh  = fly.Dynamics.Frame_Body.LH.Force_Total * units_force;
+    force_rh  = fly.Dynamics.Frame_Body.RH.Force_Total * units_force;
+    torque_lh = fly.Dynamics.Frame_Body.LH.Torque_Total * units_torque;
+    torque_rh = fly.Dynamics.Frame_Body.RH.Torque_Total * units_torque;
+
+    [~, peakIndices] = findpeaks(phi);
+    nCycles = length(peakIndices) - 1;
+
+    if nCycles < 1
+        continue;
+    end
+
+    % Pre-allocate
+    nf = @(x) zeros(3, numTimePoints, nCycles);
+    fSum = nf(0); fLH = nf(0); fRH = nf(0);
+    tSum = nf(0); tLH = nf(0); tRH = nf(0);
+
+    for j = 1:nCycles
+        sIdx = peakIndices(j);
+        eIdx = peakIndices(j+1);
+
+        % Interpolate to fixed time base
+        fSum(:,:,j) = interp1(linspace(0,1,eIdx-sIdx+1), (force_lh(:,sIdx:eIdx)+force_rh(:,sIdx:eIdx))', normalizedTime, 'linear', 'extrap')';
+        fLH(:,:,j)  = interp1(linspace(0,1,eIdx-sIdx+1), force_lh(:,sIdx:eIdx)', normalizedTime, 'linear', 'extrap')';
+        fRH(:,:,j)  = interp1(linspace(0,1,eIdx-sIdx+1), force_rh(:,sIdx:eIdx)', normalizedTime, 'linear', 'extrap')';
+        tSum(:,:,j) = interp1(linspace(0,1,eIdx-sIdx+1), (torque_lh(:,sIdx:eIdx)+torque_rh(:,sIdx:eIdx))', normalizedTime, 'linear', 'extrap')';
+        tLH(:,:,j)  = interp1(linspace(0,1,eIdx-sIdx+1), torque_lh(:,sIdx:eIdx)', normalizedTime, 'linear', 'extrap')';
+        tRH(:,:,j)  = interp1(linspace(0,1,eIdx-sIdx+1), torque_rh(:,sIdx:eIdx)', normalizedTime, 'linear', 'extrap')';
+    end
+
+    % Store means
+    meanForcesSumAllFlies(:,:,flyIdx)   = mean(fSum, 3);
+    meanForcesLHAllFlies(:,:,flyIdx)    = mean(fLH, 3);
+    meanForcesRHAllFlies(:,:,flyIdx)    = mean(fRH, 3);
+    meanTorquesSumAllFlies(:,:,flyIdx)  = mean(tSum, 3);
+    meanTorquesLHAllFlies(:,:,flyIdx)   = mean(tLH, 3);
+    meanTorquesRHAllFlies(:,:,flyIdx)   = mean(tRH, 3);
+end
+
+%% Step 5: Filter Flies Based on Std Dev
+meanF = mean(meanForcesSumAllFlies, 3);
+stdF  = std(meanForcesSumAllFlies, 0, 3);
 validFlies = [];
-for flyIdx = 1:length(fly_num)
-    flyMeanForce = mean(meanForcesSumAllFlies(:, :, flyIdx), 2); % Mean force for this fly across all components
-    overallMeanForce = mean(meanForcesSumAcrossFlies, 2); % Overall mean across all flies
-    overallStdForce = std(meanForcesSumAcrossFlies, 0, 2); % Standard deviation across flies
 
-    % Check if this fly's mean force is within one standard deviation
-    if all(abs(flyMeanForce - overallMeanForce) <= overallStdForce)
+for flyIdx = 1:numFlies
+    flyMean = mean(meanForcesSumAllFlies(:,:,flyIdx), 2);
+    if all(abs(flyMean - mean(flyMean, 2)) <= stdF(:,1))
         validFlies = [validFlies, flyIdx];
     end
 end
 
-% Recalculate the mean and standard deviation for valid flies
-filteredMeanForcesSum = mean(meanForcesSumAllFlies(:, :, validFlies), 3);
-filteredStdForcesSum = std(meanForcesSumAllFlies(:, :, validFlies), 0, 3);
-filteredMeanTorquesSum = mean(meanTorquesSumAllFlies(:, :, validFlies), 3);
-filteredStdTorquesSum = std(meanTorquesSumAllFlies(:, :, validFlies), 0, 3);
+% Recalculate based on validFlies
+filteredMeanForcesSum   = mean(meanForcesSumAllFlies(:,:,validFlies), 3);
+filteredStdForcesSum    = std(meanForcesSumAllFlies(:,:,validFlies), 0, 3);
+filteredMeanTorquesSum  = mean(meanTorquesSumAllFlies(:,:,validFlies), 3);
+filteredStdTorquesSum   = std(meanTorquesSumAllFlies(:,:,validFlies), 0, 3);
 
+%% Step 6: Plot with Floating Legend
+figure('Name', 'Filtered Forces and Torques');
+layout = tiledlayout(3,2, 'TileSpacing', 'compact', 'Padding', 'compact');
 
-% Forces and torques with shaded standard deviation
-figure;
+labels = {'Upward Force', 'Yaw Torque', 'Forward Force', ...
+          'Roll Torque', 'Sideward Force', 'Pitch Torque'};
+ylabels = {'Force (N)', 'Torque (Nm)', 'Force (N)', ...
+           'Torque (Nm)', 'Force (N)', 'Torque (Nm)'};
+ylims = [-5e-5, 5e-5; -5e-8, 5e-8; -5e-5, 5e-5; -5e-8, 5e-8; -5e-5, 5e-5; -5e-8, 5e-8];
+forceIdx = [2,2,1,1,3,3];
+torqueIdx = [2,2,1,1,3,3];
 
-% Forces (Z-Component)
-subplot(3, 2, 1);
-hold on;
-fill([normalizedTime, fliplr(normalizedTime)], ...
-     [filteredMeanForcesSum(2, :) + filteredStdForcesSum(2, :), ...
-      fliplr(filteredMeanForcesSum(2, :) - filteredStdForcesSum(2, :))], ...
-     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded area
-plot(normalizedTime, filteredMeanForcesSum(2, :), 'k', 'LineWidth', 2); % Mean line
-plot(normalizedTime, mean(meanForcesLHAllFlies(2, :, validFlies), 3), 'r', 'LineWidth', 1.5); % LH line
-plot(normalizedTime, mean(meanForcesRHAllFlies(2, :, validFlies), 3), 'b', 'LineWidth', 1.5); % RH line
-title('Upward Force');
-ylabel('Force (N)');
-ylim([-5*10^-5 5*10^-5])
+for i = 1:6
+    nexttile;
+    hold on;
 
-% Torques (Z-Component)
-subplot(3, 2, 2);
-hold on;
-fill([normalizedTime, fliplr(normalizedTime)], ...
-     [filteredMeanTorquesSum(2, :) + filteredStdTorquesSum(2, :), ...
-      fliplr(filteredMeanTorquesSum(2, :) - filteredStdTorquesSum(2, :))], ...
-     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded area
-plot(normalizedTime, filteredMeanTorquesSum(2, :), 'k', 'LineWidth', 2); % Mean line
-plot(normalizedTime, mean(meanTorquesLHAllFlies(2, :, validFlies), 3), 'r', 'LineWidth', 1.5); % LH line
-plot(normalizedTime, mean(meanTorquesRHAllFlies(2, :, validFlies), 3), 'b', 'LineWidth', 1.5); % RH line
-title('Yaw Torque');
-ylabel('Torque (Nm)');
-ylim([-5*10^-8 5*10^-8])
+    % Fill STD region
+    if mod(i,2)==1
+        idx = forceIdx(i);
+        fill([normalizedTime, fliplr(normalizedTime)], ...
+             [filteredMeanForcesSum(idx,:) + filteredStdForcesSum(idx,:), ...
+              fliplr(filteredMeanForcesSum(idx,:) - filteredStdForcesSum(idx,:))], ...
+              [0.85, 0.85, 0.85], 'EdgeColor', 'none');
+        plot(normalizedTime, filteredMeanForcesSum(idx,:), 'k', 'LineWidth', 2);
+        plot(normalizedTime, mean(meanForcesLHAllFlies(idx,:,validFlies),3), 'r', 'LineWidth', 1.5);
+        plot(normalizedTime, mean(meanForcesRHAllFlies(idx,:,validFlies),3), 'b', 'LineWidth', 1.5);
+    else
+        idx = torqueIdx(i);
+        fill([normalizedTime, fliplr(normalizedTime)], ...
+             [filteredMeanTorquesSum(idx,:) + filteredStdTorquesSum(idx,:), ...
+              fliplr(filteredMeanTorquesSum(idx,:) - filteredStdTorquesSum(idx,:))], ...
+              [0.85, 0.85, 0.85], 'EdgeColor', 'none');
+        plot(normalizedTime, filteredMeanTorquesSum(idx,:), 'k', 'LineWidth', 2);
+        plot(normalizedTime, mean(meanTorquesLHAllFlies(idx,:,validFlies),3), 'r', 'LineWidth', 1.5);
+        plot(normalizedTime, mean(meanTorquesRHAllFlies(idx,:,validFlies),3), 'b', 'LineWidth', 1.5);
+    end
 
-% Forces (Y-Component)
-subplot(3, 2, 3);
-hold on;
-fill([normalizedTime, fliplr(normalizedTime)], ...
-     [filteredMeanForcesSum(1, :) + filteredStdForcesSum(1, :), ...
-      fliplr(filteredMeanForcesSum(1, :) - filteredStdForcesSum(1, :))], ...
-     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded area
-plot(normalizedTime, filteredMeanForcesSum(1, :), 'k', 'LineWidth', 2); % Mean line
-plot(normalizedTime, mean(meanForcesLHAllFlies(1, :, validFlies), 3), 'r', 'LineWidth', 1.5); % LH line
-plot(normalizedTime, mean(meanForcesRHAllFlies(1, :, validFlies), 3), 'b', 'LineWidth', 1.5); % RH line
-title('Forward Force');
-ylabel('Force (N)');
-ylim([-5*10^-5 5*10^-5])
+    title(labels{i});
+    ylabel(ylabels{i});
+    ylim(ylims(i,:));
+    grid on;
 
-% Torques (Y-Component)
-subplot(3, 2, 4);
-hold on;
-fill([normalizedTime, fliplr(normalizedTime)], ...
-     [filteredMeanTorquesSum(1, :) + filteredStdTorquesSum(1, :), ...
-      fliplr(filteredMeanTorquesSum(1, :) - filteredStdTorquesSum(1, :))], ...
-     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded area
-plot(normalizedTime, filteredMeanTorquesSum(1, :), 'k', 'LineWidth', 2); % Mean line
-plot(normalizedTime, mean(meanTorquesLHAllFlies(1, :, validFlies), 3), 'r', 'LineWidth', 1.5); % LH line
-plot(normalizedTime, mean(meanTorquesRHAllFlies(1, :, validFlies), 3), 'b', 'LineWidth', 1.5); % RH line
-title('Roll Torque');
-ylabel('Torque (Nm)');
-ylim([-5*10^-8 5*10^-8])
+    if i >= 5
+        xlabel('Normalized Stroke Cycle');
+    else
+        set(gca, 'XColor', 'none');
+    end
+end
 
-% Forces (X-Component)
-subplot(3, 2, 5);
-hold on;
-fill([normalizedTime, fliplr(normalizedTime)], ...
-     [filteredMeanForcesSum(3, :) + filteredStdForcesSum(3, :), ...
-      fliplr(filteredMeanForcesSum(3, :) - filteredStdForcesSum(3, :))], ...
-     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded area
-plot(normalizedTime, filteredMeanForcesSum(3, :), 'k', 'LineWidth', 2); % Mean line
-plot(normalizedTime, mean(meanForcesLHAllFlies(3, :, validFlies), 3), 'r', 'LineWidth', 1.5); % LH line
-plot(normalizedTime, mean(meanForcesRHAllFlies(3, :, validFlies), 3), 'b', 'LineWidth', 1.5); % RH line
-title('Sideward Force');
-ylabel('Force (N)');
-xlabel('Stroke Cycle');
-ylim([-5*10^-5 5*10^-5])
-
-% Torques (X-Component)
-subplot(3, 2, 6);
-hold on;
-fill([normalizedTime, fliplr(normalizedTime)], ...
-     [filteredMeanTorquesSum(3, :) + filteredStdTorquesSum(3, :), ...
-      fliplr(filteredMeanTorquesSum(3, :) - filteredStdTorquesSum(3, :))], ...
-     [0.8, 0.8, 0.8], 'EdgeColor', 'none'); % Shaded area
-plot(normalizedTime, filteredMeanTorquesSum(3, :), 'k', 'LineWidth', 2); % Mean line
-plot(normalizedTime, mean(meanTorquesLHAllFlies(3, :, validFlies), 3), 'r', 'LineWidth', 1.5); % LH line
-plot(normalizedTime, mean(meanTorquesRHAllFlies(3, :, validFlies), 3), 'b', 'LineWidth', 1.5); % RH line
-title('Pitch Torque');
-ylabel('Torque (Nm)');
-xlabel('Stroke Cycle');
-ylim([-5*10^-8 5*10^-8])
+% Add floating legend
+lgd = legend(layout.Children(1), {'STD', 'Total', 'LH', 'RH'}, ...
+             'Location', 'northeastoutside', 'Box', 'off');
+lgd.Title.String = 'Legend';
 
 sgtitle('Filtered Forces and Torques with Standard Deviation');
+
+%% Step 7: Clear Created Variables
+% Get all current variables
+vars_after = who;
+
+% Determine which variables were added by the script
+vars_created = setdiff(vars_after, vars_before);
+
+% Clear only the variables created during script execution
+clear(vars_created{:});
+
+% Clear the temporary tracking variables too
+clear vars_after vars_created vars_before;
