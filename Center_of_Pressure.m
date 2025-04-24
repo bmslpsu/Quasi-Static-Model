@@ -35,8 +35,7 @@ function element = Center_of_Pressure(Kinematics, Morphology)
     COP_Wing_Frame  = zeros(3, N);      % COP vector in moving frame
     COP_Body_Frame  = zeros(3, N);      % COP vector in stationary frame
 
-   
-    delz = wing_length / N_elements;    % Length of each wing element
+   delz = wing_length / N_elements;    % Length of each wing element
 
     %% 2. Calculation
     % Loop through each time step

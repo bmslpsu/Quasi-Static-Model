@@ -73,7 +73,9 @@ function [element, Dynamics, Dynamics_Body] = Dynamic_Components(Kinematics, ele
 
     %% 2. Compute Coefficients
     % Lift and drag coefficients are calculated based on the angle of attack
-    % Source: Disckinson 1999
+    % Source: Dickinson 1999
+    % JM: Coefficients may change slighty if the wing is damaged. We should
+    % consider doing a sensitivity analysis
     AoA_deg = rad2deg(AoA);
     C_L = 0.225 + 1.58 * sin(deg2rad(2.13 * abs(AoA_deg) - 7.2));   % Lift coefficient
     C_D = 1.92 - 1.55 * cos(deg2rad(2.04 * AoA_deg - 9.82));        % Drag coefficient
