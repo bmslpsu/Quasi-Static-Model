@@ -61,7 +61,7 @@ dt = delaunayTriangulation(points);
 % Get the convex hull
 [~, volume] = convexHull(dt);
 
-mass = volume*fly_Body.density;
+mass = volume*fly_Body.density; % kg
 
 CG = [(max(fly_Body.thorax_x(:)) + min(fly_Body.thorax_x(:)))/2, (max(fly_Body.thorax_y(:)) + min(fly_Body.thorax_y(:)))/2, (max(fly_Body.thorax_z(:)) + min(fly_Body.thorax_z(:)))/2];
 

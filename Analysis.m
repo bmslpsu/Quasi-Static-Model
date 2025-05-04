@@ -1,5 +1,5 @@
 function [Fly] = Analysis(LH_Chord_Cut, LH_Span_Cut, RH_Chord_Cut, RH_Span_Cut, LH_Stroke_Amplitude, RH_Stroke_Amplitude, Wing_Plane_angle_LH, Wing_Plane_angle_RH, Body_angle, FilteredAngleL, FilteredAngleR, period, dt, Robot)
-%% Note on the Axese
+%% Note on the Axes
 
 % For the wing
 % x-axis is along the length of the wing (Root to Tip)
@@ -20,7 +20,7 @@ digits(6); % sets decimal point accuracy
 %% Standard Constants
 [metrics, ~, ~] = get_metrics();
 
-%% Variable Decleration
+%% Variable Declaration
 %Creates structures to manage data throughout the program
 Wing_Shape_LH = struct();
 Wing_Shape_RH = struct();
@@ -68,7 +68,7 @@ Wing_Element_RH = Center_of_Pressure(Kinematics.RH, Morphology.Wing_RH);
 
 %% Find the Linear Velocity of each Element for each Time Step
 % Calculates the linear velocity of each element based on the magnitude of
-% the angluar velocity
+% the angular velocity
 Wing_Element_LH = Kin_Linear(Kinematics.LH, Wing_Element_LH);
 Wing_Element_RH = Kin_Linear(Kinematics.RH, Wing_Element_RH);
 
