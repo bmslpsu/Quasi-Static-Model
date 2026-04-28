@@ -2,8 +2,11 @@
 Quasi Static model evolved from "Quasi-Static-Integrative-Model"
 
 How to Run:
-1. Open "Main_Program" program and run
-2. You will be prompted to select the flies (or robotic data) for the analysis. Select the desired data.
-3. The program will output a data set called "Fly_Master" which can be used to run any plot. Aditionally, each individual dataset's output is saved to the orginal dataset folder.
-4. Open any plot file and run. [This is not clear]
-5. If the plot file will let you select which data you want to analyze. (some are one dataset while other accept multiple) [again not clear]
+1. Open `main.m` from the MATLAB IDE and run. **NOTE**: this will clear the workspace.
+2. Select the dataset(s) for the analysis in the popup. 
+
+    This will output a collection of datasets called `Fly_Master` to the workspace. Each dataset within `Fly_Master` will be saved to their respective output directory: `Data_Sets/[dataset name]/Outputs/`
+
+    Each new output dataset will contain a `Dynamics` structure that holds the computed forces and torques. 
+
+3. Open any of the programs in `Plots/` and run to visualize the data. **NOTE**: Some plots are currently work in progress.
