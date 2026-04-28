@@ -3,10 +3,10 @@
 % Main code runner for Drosophila Quasi-Steady Model
 
 %% Step 1: Clear Environment
-clear all     % Clear all variables
-clc           % Clear command window
-warning off   % Suppress all warnings
-% close all   % Uncomment to close any open figures
+clear all        % Clear all variables, functions, etc
+clc              % Clear command window
+warning off      % Suppress all warnings
+close all hidden % Close all figures, including minimized ones
 
 %% Step 2: Runtime Timestamp
 current_time = datetime;
@@ -76,9 +76,6 @@ for i = 1:length(selectedFolderNames)
     Fly_Master(i).Fly_Num               = Fly_Data.Fly_Num;
     Fly_Master(i).Attributes            = Fly_Data.Attributes;
 
-    % Clear unnecessary data
-    clear dt FilteredAngleL FilteredAngleR Period Frame_Rate
-
     %% Step 5: Save Processed Data
     saveFolder = fullfile('Data_Sets', Data_Set_Selector, 'Outputs');
     Fly_Data = Fly_Master(i);
@@ -88,12 +85,11 @@ for i = 1:length(selectedFolderNames)
         mkdir(saveFolder);
     end
 
-    save(fullfile(saveFolder, saveFile), 'Fly_Master');
+    save(fullfile(saveFolder, saveFile), 'Fly_Data');
 end
-
-% Clear temp variables
-clear Data_Set_Selector i saveFile saveFolder selectedFolderNames 
 
 %% Step 6: Report Total Script Runtime
 disp(datetime - current_time)
-clear current_time 
+
+% Clear all the temporary variables, leave only Fly_Master
+clear -regexp ^((?!Fly_Master).)*$
