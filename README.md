@@ -1,12 +1,24 @@
 # Quasi-Static-Model
-Quasi Static model evolved from "Quasi-Static-Integrative-Model"
+Quasi Static model evolved from "Quasi-Static-Integrative-Model".
 
-How to Run:
-1. Open `main.m` from the MATLAB IDE and run. **NOTE**: this will clear the workspace.
-2. Select the dataset(s) for the analysis in the popup. 
+## Description
+This MATLAB module calculates the net forces and torques that _Drosophila melanogaster_ (common fruitfly) generates from flapping its wings. Variable wing damage is also supported.
 
-    This will output a collection of datasets called `Fly_Master` to the workspace. Each dataset within `Fly_Master` will be saved to their respective output directory: `Data_Sets/[dataset name]/Outputs/`
+## Instructions
+1. (Optional) Upload your own dataset into `Data_Sets`.
 
-    Each new output dataset will contain a `Dynamics` structure that holds the computed forces and torques. 
+    This module is preloaded with kinematic datasets from two experiments. The datasets prefixed with `fly_` correspond to a tethered fly that gets cut mid-flight (Fry et al. 2005) and `Robot_` relates to a dynamically-scaled robotic fly with various wingbeat patterns and wing damage (Muijres et al. 2017). Use these datasets as references to format your own dataset.
+2. Open `main.m` from the MATLAB IDE and run. 
 
-3. Open any of the programs in `Plots/` and run to visualize the data. **NOTE**: Some plots are currently work in progress.
+    **NOTE**: this will clear the workspace.
+3. Select the dataset(s) for the analysis in the popup. 
+
+    This will output a collection of datasets called `Fly_Master` to the workspace. Each dataset within `Fly_Master` will be saved to their respective output directory: `Data_Sets/[dataset name]/Outputs/`. Each new output dataset will contain a `Dynamics` structure that holds the computed forces and torques. 
+4. Open any of the programs in `Plots/` and run to visualize the data. 
+    
+    **NOTE**: Some plots are currently work in progress.
+
+## References
+​F. T. Muijres, N. A. Iwasaki, M. J. Elzinga, J. M. Melis, and M. H. Dickinson,​ ​"Flies Compensate for Unilateral Wing Damage Through Modular Adjustments of Wing​ ​and Body Kinematics," Interface Focus, vol. 7, no. 1, p. 20160103​, Feb. 2017, doi: 10.1098/rsfs.2016.0103.
+
+S. N. Fry, R. Sayaman, and M. H. Dickinson, "The Aerodynamics of Hovering Flight in Drosophila," Journal of Experimental Biology, vol. 208, no. 12, pp. 2303–2318, Jun. 2005, doi: 10.1242/jeb.01612.
