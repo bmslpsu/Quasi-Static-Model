@@ -8,6 +8,8 @@ clc              % Clear command window
 warning off      % Suppress all warnings
 close all hidden % Close all figures, including minimized ones
 
+addpath(genpath("Utils/")) % temporary fix to find Utils functions
+
 %% Step 2: Runtime Timestamp
 current_time = datetime;
 
