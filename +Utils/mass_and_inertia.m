@@ -1,4 +1,5 @@
 function [Fly]  = mass_and_inertia(Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Fly)
+import Utils.get_metrics
 
 %% Get standard data
 [metrics, fly_Body, fly_wing] = get_metrics();

@@ -2,13 +2,13 @@
 % Jacob Taylor
 % Main code runner for Drosophila Quasi-Steady Model
 
-%% Step 1: Clear Environment
-clear all        % Clear all variables, functions, etc
-clc              % Clear command window
-warning off      % Suppress all warnings
-close all hidden % Close all figures, including minimized ones
+%% Step 1: Set Up Environment
+clear
+clc
+warning off % TODO: remove global variables, investigate duplicate points in delaunayTriangulation
+close all hidden
 
-addpath(genpath("Utils/")) % temporary fix to find Utils functions
+import Utils.Analysis
 
 %% Step 2: Runtime Timestamp
 current_time = datetime;

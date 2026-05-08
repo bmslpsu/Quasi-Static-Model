@@ -1,5 +1,6 @@
 function [Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Joint] = wingPlotGUI(Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Wing_Shapes_Given, lhSpanwiseCut, lhChordwiseCut, rhSpanwiseCut, rhChordwiseCut)
-   
+    import Utils.Standard_Wing
+
     % Global variables
     global Wing_Shape_lh Wing_Shape_rh Body_Shape Joint
     
@@ -140,6 +141,9 @@ function [Wing_left_x_data, Wing_left_y_data, Wing_left_z_data, Wing_right_x_dat
 end
 
 function Wing_Chossen(lhWingLength, lhChordLength, lhSpanwiseCut, lhChordwiseCut, rhWingLength, rhChordLength, rhSpanwiseCut, rhChordwiseCut, fig)
+    import Utils.Standard_Wing
+    import Utils.Standard_Body
+
     [Wing_left_x_data, Wing_left_y_data, Wing_left_z_data, Wing_right_x_data, Wing_right_y_data, Wing_right_z_data] = Standard_Wing(lhWingLength, lhChordLength, lhSpanwiseCut, lhChordwiseCut, rhWingLength, rhChordLength, rhSpanwiseCut, rhChordwiseCut);
 
     global Wing_Shape_lh Wing_Shape_rh Body_Shape Joint

@@ -1,4 +1,13 @@
 function [Fly] = Analysis(LH_Chord_Cut, LH_Span_Cut, RH_Chord_Cut, RH_Span_Cut, LH_Stroke_Amplitude, RH_Stroke_Amplitude, Wing_Plane_angle_LH, Wing_Plane_angle_RH, Body_angle, FilteredAngleL, FilteredAngleR, period, dt, Robot)
+import Utils.get_metrics 
+import Utils.wingPlotGUI 
+import Utils.mass_and_inertia 
+import Utils.Kin 
+import Utils.Center_of_Pressure 
+import Utils.Kin_Linear 
+import Utils.Dynamic_Components 
+import Utils.True_Frame
+
 %% Note on the Axese
 
 % For the wing
