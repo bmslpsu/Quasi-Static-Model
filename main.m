@@ -10,6 +10,8 @@ close all hidden
 
 import Utils.Analysis
 
+addpath(genpath("Utils/"))
+
 %% Step 2: Runtime Timestamp
 current_time = datetime;
 
