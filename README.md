@@ -14,9 +14,10 @@ This MATLAB module calculates the net forces and torques that _Drosophila melano
 3. Select the dataset(s) for the analysis in the popup. 
 
     This will output a collection of datasets called `Fly_Master` to the workspace. Each dataset within `Fly_Master` will be saved to their respective output directory: `Data_Sets/[dataset name]/Outputs/`. Each new output dataset will contain a `Dynamics` structure that holds the computed forces and torques. 
-4. Open any of the programs in `Plots/` and run to visualize the data. 
+4. Call `import Plots.*` to import all the plotting scripts, or choose a specific one.
+5. Run the plotting script(s).
     
-    **NOTE**: Some plots are currently work in progress.
+    **NOTE**: Some combination of scripts and datasets may be incompatible. Some plots are currently work in progress.
 
 ## References
 ​F. T. Muijres, N. A. Iwasaki, M. J. Elzinga, J. M. Melis, and M. H. Dickinson,​ ​"Flies Compensate for Unilateral Wing Damage Through Modular Adjustments of Wing​ ​and Body Kinematics," Interface Focus, vol. 7, no. 1, p. 20160103​, Feb. 2017, doi: 10.1098/rsfs.2016.0103.
