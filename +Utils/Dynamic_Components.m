@@ -62,10 +62,10 @@ function [element, Dynamics, Dynamics_Body] = Dynamic_Components(Kinematics, ele
     AoA = psi;
 
     % Rotation matrix for body angle correction
-    Rot_body_angle  = rotx(deg2rad(Body_angle));
+    Rot_body_angle  = rotx(Body_angle);
 
     % Rotation matrix for wing stroke plane correction
-    Rot_wing_plane = rotx(deg2rad(Wing_Plane_angle));
+    Rot_wing_plane = rotx(Wing_Plane_angle);
 
     % Apply transformations
     CG_body     = Rot_body_angle * CG';
@@ -121,7 +121,7 @@ function [element, Dynamics, Dynamics_Body] = Dynamic_Components(Kinematics, ele
             % Compute lift direction (normal to velocity direction)
             % Source: 2008 Dickson
             % Compute linear velocity normal
-            v_linear_Normal = rotx(sign(element(i).linear_vel(2,j)) * pi/2) *element(i).linear_vel(:,j) ./ element(i).linear_vel_norm(j);
+            v_linear_Normal = rotx(rad2deg(sign(element(i).linear_vel(2,j)) * pi/2)) *element(i).linear_vel(:,j) ./ element(i).linear_vel_norm(j);
 
 
             % Compute magnitude of normal velocity

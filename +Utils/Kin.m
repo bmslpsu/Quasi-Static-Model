@@ -52,11 +52,11 @@ function Kinematics = Kin(Rotation, Stroke, Deviation, rad_or_deg, dt)
 
     % Compute rotation matrices for each timestep
     for i = 1:N
-        R_x = rotz(phi(i));
+        R_x = rotz( rad2deg(phi(i)) );
         
-        R_y = roty(beta(i));
+        R_y = roty( rad2deg(beta(i)) );
         
-        R_z = rotx(psi(i));
+        R_z = rotx( rad2deg(psi(i)) );
         
         % Wing to Body Frame
         R_wb(:, :, i) = R_z' * R_y' * R_x';
