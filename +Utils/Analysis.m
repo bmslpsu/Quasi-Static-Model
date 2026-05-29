@@ -62,6 +62,7 @@ Morphology.Wing_RH.Wing_Plane_angle = Fly_Data.Wing_Plane_Angle_RH;
 Fly.time = [0:dt:dt*(period-1)];
 
 %% Kinematic data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TODO: Rename Kin to something descriptive and unambiguous
 Kinematics.LH = Kin(...
     FilteredAngleL(:,2), ...
     FilteredAngleL(:,1).*Fly_Data.Stroke_Amplitude_LH/100, ...
@@ -86,6 +87,7 @@ Wing_Element_LH = Kin_Linear(Kinematics.LH, Wing_Element_LH);
 Wing_Element_RH = Kin_Linear(Kinematics.RH, Wing_Element_RH);
 
 %% Find the Forces and Torques Acting on Each Wing %%%%%%%%%%%%%%%%%%%%%%%%
+% TODO: Rewrite into a proper Dynamics constructor
 [Wing_Element_LH, Dynamics.Frame_Wing.LH, Dynamics.Frame_Body.LH ] = ...
     Dynamic_Components(Kinematics.LH, Wing_Element_LH, ...
     Morphology.Wing_LH, Morphology, metrics.airDensity);
@@ -97,6 +99,8 @@ Wing_Element_RH = Kin_Linear(Kinematics.RH, Wing_Element_RH);
 [Dynamics.Frame_Body.RH] = True_Frame(Dynamics.Frame_Body.RH);
 
 %% Store in Structure %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% TODO: Unpack Fly, every Fly_Master element should just be a struct of
+% Kinematics, Morphology, Dynamics, time, Fly_Num, and Attributes
 Fly.Kinematics  = Kinematics;
 Fly.Morphology  = Morphology;
 Fly.Dynamics    = Dynamics;

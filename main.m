@@ -48,7 +48,7 @@ for i = 1:length(selectedFolderNames)
     load(['Data_Sets' filesep Data_Set_Selector filesep...
         'Inputs' filesep 'Fly_Data.mat']);
 
-    % Flip RH/LH if RH is damaged (TODO: Investigate why)
+    % Flip RH/LH if RH is damaged (TODO: Investigate the purpose of this operation)
     if Fly_Data.Chord_Cut_RH < 100 || Fly_Data.Span_Cut_RH < 100
         [Fly_Data.Chord_Cut_LH, Fly_Data.Chord_Cut_RH]...
             = deal(Fly_Data.Chord_Cut_RH, Fly_Data.Chord_Cut_LH);
