@@ -19,6 +19,16 @@ This MATLAB module calculates the net forces and torques that _Drosophila melano
     
     **NOTE**: Some combination of scripts and datasets may be incompatible. Some plots are currently work in progress.
 
+## Dataset Tree Example
+```
+Data_Sets
+├── Example_Dataset
+    ├── Inputs
+        ├── Fly_Data.mat
+        └── Kinematics.mat
+    └── Outputs
+```
+
 ## References
 ​F. T. Muijres, N. A. Iwasaki, M. J. Elzinga, J. M. Melis, and M. H. Dickinson,​ ​"Flies Compensate for Unilateral Wing Damage Through Modular Adjustments of Wing​ ​and Body Kinematics," Interface Focus, vol. 7, no. 1, p. 20160103​, Feb. 2017, doi: 10.1098/rsfs.2016.0103.
 
