@@ -68,9 +68,8 @@ for i = 1:length(selectedFolderNames)
     Kinematics_RH = FilteredAngleR;
 
     % Run Analysis
-    Fly_Master(i).Fly = Analysis(Fly_Data.Chord_Cut_LH, Fly_Data.Span_Cut_LH, Fly_Data.Chord_Cut_RH, Fly_Data.Span_Cut_RH, ...
-        Fly_Data.Stroke_Amplitude_LH, Fly_Data.Stroke_Amplitude_RH, Fly_Data.Wing_Plane_Angle_LH, Fly_Data.Wing_Plane_Angle_RH, ...
-        Fly_Data.Body_Angle, Kinematics_LH, Kinematics_RH, Period, 1/Frame_Rate, true);
+    Fly_Master(i).Fly = Analysis(...
+        Fly_Data,Kinematics_LH,Kinematics_RH,Period,1/Frame_Rate);
 
     % Save the Fly_Data Parameters into Fly_Master
     % TODO: move this into Analysis.m

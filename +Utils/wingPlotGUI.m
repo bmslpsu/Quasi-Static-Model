@@ -1,4 +1,4 @@
-function [Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Joint] = wingPlotGUI(Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Wing_Shapes_Given, lhSpanwiseCut, lhChordwiseCut, rhSpanwiseCut, rhChordwiseCut)
+function [Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Joint] = wingPlotGUI(Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Wing_Shapes_Given, Fly_Data)
     import Utils.Standard_Wing
 
     % Global variables
@@ -7,7 +7,9 @@ function [Wing_Shape_lh, Wing_Shape_rh, Body_Shape, Joint] = wingPlotGUI(Wing_Sh
 
     if Wing_Shapes_Given == true
         [~, ~, ~, ~, ~, ~, lhWingLength_Max, lhChordLength_Max, rhWingLength_Max, rhChordLength_Max] = Standard_Wing(0, 0, 100, 100, 0, 0, 100, 100);
-        Wing_Chossen(lhWingLength_Max, lhChordLength_Max, lhSpanwiseCut, lhChordwiseCut, rhWingLength_Max, rhChordLength_Max, rhSpanwiseCut, rhChordwiseCut, false)
+        Wing_Chossen(...
+            lhWingLength_Max, lhChordLength_Max, Fly_Data,...
+            rhWingLength_Max, rhChordLength_Max, false)
         return
     end
 
@@ -115,13 +117,13 @@ function resetValues(lhWingLengthField, lhChordLengthField, lhSpanwiseCutField, 
 end
 
 % Function to update image
-function [Wing_left_x_data, Wing_left_y_data, Wing_left_z_data, Wing_right_x_data, Wing_right_y_data, Wing_right_z_data] = updatePlot(lhWingLength, lhChordLength, lhSpanwiseCut, lhChordwiseCut, rhWingLength, rhChordLength, rhSpanwiseCut, rhChordwiseCut, ax)
+function [Wing_left_x_data, Wing_left_y_data, Wing_left_z_data, Wing_right_x_data, Wing_right_y_data, Wing_right_z_data] = updatePlot(lhWingLength, lhChordLength, Fly_Data, rhWingLength, rhChordLength, ax)
 
 
     cla(ax);  % Clear existing plot
 
     
-    [Wing_left_x_data, Wing_left_y_data, Wing_left_z_data, Wing_right_x_data, Wing_right_y_data, Wing_right_z_data] = Standard_Wing(lhWingLength, lhChordLength, lhSpanwiseCut, lhChordwiseCut, rhWingLength, rhChordLength, rhSpanwiseCut, rhChordwiseCut);
+    [Wing_left_x_data, Wing_left_y_data, Wing_left_z_data, Wing_right_x_data, Wing_right_y_data, Wing_right_z_data] = Standard_Wing(lhWingLength, lhChordLength, Fly_Data.Span_Cut_LH, Fly_Data.Chord_Cut_LH, rhWingLength, rhChordLength, Fly_Data.Span_Cut_RH, Fly_Data.Chord_Cut_RH);
     
     hold(ax, 'on');
 
@@ -140,11 +142,11 @@ function [Wing_left_x_data, Wing_left_y_data, Wing_left_z_data, Wing_right_x_dat
     hold(ax, 'off');
 end
 
-function Wing_Chossen(lhWingLength, lhChordLength, lhSpanwiseCut, lhChordwiseCut, rhWingLength, rhChordLength, rhSpanwiseCut, rhChordwiseCut, fig)
+function Wing_Chossen(lhWingLength, lhChordLength, Fly_Data, rhWingLength, rhChordLength, fig)
     import Utils.Standard_Wing
     import Utils.Standard_Body
 
-    [Wing_left_x_data, Wing_left_y_data, Wing_left_z_data, Wing_right_x_data, Wing_right_y_data, Wing_right_z_data] = Standard_Wing(lhWingLength, lhChordLength, lhSpanwiseCut, lhChordwiseCut, rhWingLength, rhChordLength, rhSpanwiseCut, rhChordwiseCut);
+    [Wing_left_x_data, Wing_left_y_data, Wing_left_z_data, Wing_right_x_data, Wing_right_y_data, Wing_right_z_data] = Standard_Wing(lhWingLength, lhChordLength, Fly_Data.Span_Cut_LH, Fly_Data.Chord_Cut_LH, rhWingLength, rhChordLength, Fly_Data.Span_Cut_RH, Fly_Data.Chord_Cut_RH);
 
     global Wing_Shape_lh Wing_Shape_rh Body_Shape Joint
 
