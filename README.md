@@ -1,5 +1,5 @@
-# Quasi-Static-Model
-Quasi Static model evolved from "Quasi-Static-Integrative-Model".
+# Quasi-Steady-Model
+Quasi-steady model evolved from "Quasi-Static-Integrative-Model".
 
 ## Description
 This MATLAB module calculates the net forces and torques that _Drosophila melanogaster_ (common fruitfly) generates from flapping its wings. Variable wing damage is also supported.
