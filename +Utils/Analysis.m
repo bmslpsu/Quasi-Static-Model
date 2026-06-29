@@ -1,6 +1,6 @@
 function [Fly] = Analysis(Fly_Data, FilteredAngleL, FilteredAngleR, period, dt)
 import Utils.get_metrics 
-import Utils.wingPlotGUI 
+import Utils.Morphology_Init 
 import Utils.mass_and_inertia 
 import Utils.Kin 
 import Utils.Center_of_Pressure 
@@ -34,32 +34,14 @@ digits(6); % sets decimal point accuracy
 %Creates structures to manage data throughout the program
 Wing_Shape_LH = struct();
 Wing_Shape_RH = struct();
-Body_Shape = struct();
 Fly = struct();
 
 %% Wing and Body Selection %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO: Replace this entire section with a `Morphology` constructor
 % LH and RH wing uploader
-[Morphology.Wing_LH.wing_shape, Morphology.Wing_RH.wing_shape, ...
-    Morphology.Body.Body_shape, Morphology.Body.Joint] = ...
-    wingPlotGUI(Wing_Shape_LH, Wing_Shape_RH, Body_Shape,true,Fly_Data);
-
-% Body and Wing physical Analyis
-[Morphology] = mass_and_inertia( ...
-    Morphology.Wing_LH.wing_shape,Morphology.Wing_RH.wing_shape, ...
-    Morphology.Body.Body_shape, Morphology);
-
-% There is no "body" for robotic flies so the CG is considered to be the
-% joint (legacy feature)
-Morphology.total.CG = Morphology.Body.Joint;
-
-% Store data
-Morphology.Body.Body_angle          = Fly_Data.Body_Angle;
-Morphology.Wing_LH.Wing_Plane_angle = Fly_Data.Wing_Plane_Angle_LH;
-Morphology.Wing_RH.Wing_Plane_angle = Fly_Data.Wing_Plane_Angle_RH;
+Morphology = Morphology_Init(Wing_Shape_LH,Wing_Shape_RH,Fly_Data);
 
 %% Time Set Up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Fly.time = [0:dt:dt*(period-1)];
+Fly.time = 0:dt:dt*(period-1);
 
 %% Kinematic data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % TODO: Rename Kin to something descriptive and unambiguous
