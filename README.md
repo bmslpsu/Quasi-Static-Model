@@ -35,9 +35,8 @@ Data_Sets
 | main.m | 8 | before removing this, remove global variables and investigate duplicate points in delaunayTriangulation |
 | main.m | 51 | Investigate the purpose of this operation |
 | main.m | 75 | move this into Analysis.m |
-| +Utils/Analysis.m | 47 | Rename Kin to something descriptive and unambiguous |
-| +Utils/Analysis.m | 72 | Rewrite into a proper Dynamics constructor |
-| +Utils/Analysis.m | 84 | Unpack Fly, every Fly_Master element should just be a struct of Kinematics, Morphology, Dynamics, time, Fly_Num, and Attributes |
+| +Utils/Analysis.m | 65 | Rewrite into a proper Dynamics constructor |
+| +Utils/Analysis.m | 77 | Unpack Fly, every Fly_Master element should just be a struct of Kinematics, Morphology, Dynamics, time, Fly_Num, and Attributes |
 
 ## References
 ​F. T. Muijres, N. A. Iwasaki, M. J. Elzinga, J. M. Melis, and M. H. Dickinson,​ ​"Flies Compensate for Unilateral Wing Damage Through Modular Adjustments of Wing​ ​and Body Kinematics," Interface Focus, vol. 7, no. 1, p. 20160103​, Feb. 2017, doi: 10.1098/rsfs.2016.0103.

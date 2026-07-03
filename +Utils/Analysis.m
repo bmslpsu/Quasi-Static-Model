@@ -1,7 +1,7 @@
 function [Fly] = Analysis(Fly_Data, FilteredAngleL, FilteredAngleR, period, dt)
 import Utils.get_metrics
 import Utils.Init_Morphology
-import Utils.Kin
+import Utils.Init_Kinematics
 import Utils.Center_of_Pressure
 import Utils.Kin_Linear
 import Utils.Dynamic_Components
@@ -35,26 +35,20 @@ Wing_Shape_LH = struct();
 Wing_Shape_RH = struct();
 Fly = struct();
 
+%% Time Set Up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Fly.time = 0:dt:dt*(period-1);
+
 %% Wing and Body Selection %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LH and RH wing uploader
 Morphology = Init_Morphology(Wing_Shape_LH,Wing_Shape_RH,Fly_Data);
 
-%% Time Set Up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Fly.time = 0:dt:dt*(period-1);
-
 %% Kinematic data %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% TODO: Rename Kin to something descriptive and unambiguous
-Kinematics.LH = Kin(...
-    FilteredAngleL(:,2), ...
-    FilteredAngleL(:,1).*Fly_Data.Stroke_Amplitude_LH/100, ...
-    FilteredAngleL(:,3), 0, dt);
-Kinematics.RH = Kin(...
-    FilteredAngleR(:,2), ...
-    FilteredAngleR(:,1).*Fly_Data.Stroke_Amplitude_RH/100, ...
-    FilteredAngleR(:,3), 0, dt);
-
-Kinematics.LH.N = period;
-Kinematics.RH.N = period;
+sampLH = Fly_Data.Stroke_Amplitude_LH/100;
+sampRH = Fly_Data.Stroke_Amplitude_RH/100;
+Kinematics = Init_Kinematics(...
+    [FilteredAngleL(:,1).*sampLH, FilteredAngleR(:,1).*sampRH],...
+    [FilteredAngleL(:,2), FilteredAngleR(:,2)],...
+    [FilteredAngleL(:,3), FilteredAngleR(:,3)],period,dt);
 
 %% Find the Location of the Center of Pressure for each Wing Element %%%%%%
 % Calculates the center of pressure of each wing element
