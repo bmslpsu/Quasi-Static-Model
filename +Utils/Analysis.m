@@ -1,13 +1,13 @@
 function [Fly] = Analysis(Fly_Data, FilteredAngleL, FilteredAngleR, period, dt)
-import Utils.get_metrics 
-import Utils.Init_Morphology 
-import Utils.Kin 
-import Utils.Center_of_Pressure 
-import Utils.Kin_Linear 
-import Utils.Dynamic_Components 
+import Utils.get_metrics
+import Utils.Init_Morphology
+import Utils.Kin
+import Utils.Center_of_Pressure
+import Utils.Kin_Linear
+import Utils.Dynamic_Components
 import Utils.True_Frame
 
-%% Note on the Axese
+%% Note on the Axes
 
 % For the wing
 % x-axis is along the length of the wing (Root to Tip)
@@ -29,7 +29,7 @@ digits(6); % sets decimal point accuracy
 %% Standard Constants
 [metrics, ~, ~] = get_metrics();
 
-%% Variable Decleration
+%% Variable Declaration
 %Creates structures to manage data throughout the program
 Wing_Shape_LH = struct();
 Wing_Shape_RH = struct();
