@@ -2,23 +2,29 @@
 % Jacob Taylor
 % Main code runner for Drosophila Quasi-Steady Model
 
-%% Step 1: Set Up Environment
+%% Set Up Environment
 clear
 clc
-warning off % TODO: before removing this, remove global variables and investigate duplicate points in delaunayTriangulation
 close all hidden
+
+% When using delaunayTriangulation (Utils.mass_and_inertia), a warning
+% might be thrown (DupPtsWarnId). This warning simply informs you that
+% duplicate points have been removed, which is not concerning for our use
+% cases. We will assume the given morphology is correct, thus, we'll 
+% suppress this warning for the duration of the script
+warning('off','MATLAB:delaunayTriangulation:DupPtsWarnId');
 
 import Utils.Analysis
 import Utils.select_datasets
 
-%% Step 2: Runtime Timestamp
+% Runtime Timestamp
 current_time = datetime;
 
-%% Step 3: Select Data Set Folders
+%% Select Data Set Folders
 selectedFolderNames = select_datasets();
 disp('Folders selected.');
 
-%% Step 4: Process Each Selected Folder
+%% Process Each Selected Folder
 for i = 1:length(selectedFolderNames)
     disp(selectedFolderNames(i))
     Data_Set_Selector = char(selectedFolderNames(i));
@@ -58,7 +64,7 @@ for i = 1:length(selectedFolderNames)
     Fly_Master(i).Fly_Num = Fly_Data.Fly_Num;
     Fly_Master(i).Attributes = Fly_Data.Attributes;
 
-    %% Step 5: Save Processed Data
+    %% Save Processed Data
     saveFolder = fullfile('Data_Sets', Data_Set_Selector, 'Outputs');
     Fly_Data = Fly_Master(i);
     saveFile = 'Fly_Data.mat';
@@ -70,7 +76,12 @@ for i = 1:length(selectedFolderNames)
     save(fullfile(saveFolder, saveFile), 'Fly_Data');
 end
 
-%% Step 6: Report Total Script Runtime
+%% Close out
+
+% Turn the suppressed warning back on
+warning('on','MATLAB:delaunayTriangulation:DupPtsWarnId');
+
+% Report Total Script Runtime
 disp(datetime - current_time)
 
 % Clear all the temporary variables, leave only Fly_Master

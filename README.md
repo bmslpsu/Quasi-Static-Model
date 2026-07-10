@@ -32,9 +32,7 @@ Data_Sets
 ## TODO Tracker
 | File | Line No. | Description |
 | --- | :---: | --- |
-| main.m | 8 | before removing this, remove global variables and investigate duplicate points in delaunayTriangulation |
-| main.m | 51 | Investigate the purpose of this operation |
-| main.m | 75 | move this into Analysis.m |
+| main.m | 51 | move this into Analysis.m |
 | +Utils/Analysis.m | 65 | Rewrite into a proper Dynamics constructor |
 | +Utils/Analysis.m | 77 | Unpack Fly, every Fly_Master element should just be a struct of Kinematics, Morphology, Dynamics, time, Fly_Num, and Attributes |
 
