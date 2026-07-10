@@ -16,15 +16,15 @@ warning('off','MATLAB:delaunayTriangulation:DupPtsWarnId');
 
 import Utils.Analysis
 import Utils.select_datasets
+import Utils.output_dataset
 
-% Runtime Timestamp
-current_time = datetime;
+%% Analyze All Given Datasets
 
-%% Select Data Set Folders
+% prompt user for datasets
 selectedFolderNames = select_datasets();
 disp('Folders selected.');
 
-%% Process Each Selected Folder
+% cycle through every selected dataset
 for i = 1:length(selectedFolderNames)
     disp(selectedFolderNames(i))
     Data_Set_Selector = char(selectedFolderNames(i));
@@ -64,25 +64,14 @@ for i = 1:length(selectedFolderNames)
     Fly_Master(i).Fly_Num = Fly_Data.Fly_Num;
     Fly_Master(i).Attributes = Fly_Data.Attributes;
 
-    %% Save Processed Data
-    saveFolder = fullfile('Data_Sets', Data_Set_Selector, 'Outputs');
-    Fly_Data = Fly_Master(i);
-    saveFile = 'Fly_Data.mat';
-
-    if ~exist(saveFolder, 'dir')
-        mkdir(saveFolder);
-    end
-
-    save(fullfile(saveFolder, saveFile), 'Fly_Data');
+    % save processed data
+    output_dataset(Data_Set_Selector,Fly_Master(i));
 end
 
 %% Close out
 
 % Turn the suppressed warning back on
 warning('on','MATLAB:delaunayTriangulation:DupPtsWarnId');
-
-% Report Total Script Runtime
-disp(datetime - current_time)
 
 % Clear all the temporary variables, leave only Fly_Master
 clear -regexp ^((?!Fly_Master).)*$
