@@ -151,6 +151,8 @@ Fly.total.S_2_Ratio = Fly.Wing_LH.S_2/Fly.Wing_RH.S_2;
 end
 
 function Fly_vars = wing_values(x,y,z,z_thickness, Fly_vars, rho, tip_index, root_index)
+import Utils.inertial_tensor
+
 % Calculate area
 Area = polyarea(x, y);
 
@@ -166,47 +168,10 @@ Y_CG = sum_y / (6 * Area);
 Z_CG = mean(z);   % need to add portion where z axis is respected
 CG = [X_CG, Y_CG, Z_CG];
 
-% Step 1: Calculate the CoM
-x_com = sum(x) / length(x); % x-coordinate of the CoM
-y_com = sum(y) / length(y); % y-coordinate of the CoM
-z_com = sum(z) / length(z); % z-coordinate of the CoM
-
-% Shift coordinates to the CoM frame
-x_shifted = x - x_com;
-y_shifted = y - y_com;
-z_shifted = 0;
-
-% Step 2: Calculate moments of inertia in the CoM frame
-Ixx_com = rho * z_thickness * sum(y_shifted.^2 + z_shifted.^2); % Moment about x-axis
-Iyy_com = rho * z_thickness * sum(x_shifted.^2 + z_shifted.^2); % Moment about y-axis
-Izz_com = rho * z_thickness * sum(x_shifted.^2 + y_shifted.^2); % Moment about z-axis
-
-% Step 3: Calculate products of inertia in the CoM frame
-Ixy_com = -rho * z_thickness * sum(x_shifted .* y_shifted); % Product of inertia xy
-Ixz_com = -rho * z_thickness * sum(x_shifted .* z_shifted); % Product of inertia xz
-Iyz_com = -rho * z_thickness * sum(y_shifted .* z_shifted); % Product of inertia yz
-
-% Step 4: Parallel axis theorem (if needed)
 % Mass of the plate
 mass = volume*rho;
 
-% Distances from the original frame to the CoM frame
-dx = min(x_shifted);
-dxi = find(x_shifted==min(x_shifted));
-dy = y(dxi(1));
-dz = 0;
-
-% Apply the parallel axis theorem
-Ixx = Ixx_com + mass * (dy^2 + dz^2);
-Iyy = Iyy_com + mass * (dx^2 + dz^2);
-Izz = Izz_com + mass * (dx^2 + dy^2);
-
-% Products of inertia (unchanged by parallel axis theorem for CoM offset)
-Ixy = Ixy_com - mass * dx * dy;
-Ixz = Ixz_com - mass * dx * dz;
-Iyz = Iyz_com - mass * dy * dz;
-
-inertia = [Ixx, Ixy, Ixz; Ixy, Iyy, Iyz; Ixz, Iyz, Izz];
+inertia = inertial_tensor([x',y'],z_thickness,rho);
 
 % Wing Length
 x_positions = x(tip_index:root_index);
