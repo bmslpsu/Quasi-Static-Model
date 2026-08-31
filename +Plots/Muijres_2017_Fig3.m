@@ -12,7 +12,7 @@ vars_before = who;
 
 %% Step 2: Load Experimental Comparison Data (2017 Muijers)
 % Data was collected based on estimates picked fromt he plot
-load(['Plots' filesep 'Data_Muijers_2017.mat']);
+load("+Plots/Data_Muijres_2017.mat");
 
 %% Step 3: Compute Normalized Mean Forces from Each Fly
 for i = 1:length(Fly_Master)
